@@ -35,7 +35,8 @@ async function callApi(method, url, data, headers) {
 
         return {
             isSuccess: true,
-            data: res.data
+            data: res.data,
+            headers:res.headers
         };
     } catch (error) {
         return {

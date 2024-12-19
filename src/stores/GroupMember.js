@@ -2,6 +2,18 @@ import { defineStore } from 'pinia';
 
 export const useGroupStore = defineStore('groupdb', {
     state: () => ({
+        searchCondition: {
+            frontUserId: '',
+            name: '',
+            level: '',
+            paymentStatus: 0,
+            sortField: 'createdAt',
+            sortOrder: 'DESC',
+            currentPage: 1,
+            page: 1,
+            size: 10
+          },
+          tableItems: [],
         paginations: {
             currentPage: 1,
             totalCount: 0,
@@ -24,6 +36,32 @@ export const useGroupStore = defineStore('groupdb', {
         },
         updateUserData(userData){
             this.userData = userData
-        }
+        },
+        setSearchCondition(condition) {
+            this.searchCondition = condition;
+          },
+          setTableItems(items) {
+            this.tableItems = items;
+          },
+          setPaginations(pagination) {
+            this.paginations = pagination;
+          },
+          clearStore() {
+            this.searchCondition = {
+              frontUserId: '',
+              name: '',
+              level: null,
+              paymentStatus: null,
+              page: 1,
+              pageSize: 10,
+              sortBy: 'createdAt',
+              sortDirection: 'DESC'
+            };
+            this.paginations = {
+              currentPage: 1,
+              totalPages: 1
+            };
+            this.tableItems = [];
+          }
     }
 });

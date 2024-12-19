@@ -1,57 +1,51 @@
 <template>
-  
   <div class="">
     <v-form>
       <v-row class="py-4">
         <v-col>
-          <v-text-field 
-          v-model="searchCondition.frontUserId" 
-          variant="outlined" 
-          label="證號" 
-          hide-details 
-          class="search-theme"
+          <v-text-field
+            v-model="searchCondition.frontUserId"
+            variant="outlined"
+            label="證號"
+            hide-details
+            class="search-theme"
           ></v-text-field>
         </v-col>
         <v-col>
-          <v-text-field 
-          v-model="searchCondition.name" 
-          variant="outlined" 
-          label="姓名" 
-          hide-details
-          class="search-theme"
-          ></v-text-field>
+          <v-text-field v-model="searchCondition.name" variant="outlined" label="姓名" hide-details class="search-theme"></v-text-field>
         </v-col>
         <v-col>
-          <v-select 
-          label="級別" 
-          :items="levelList" 
-          item-title="name"
-          item-value="level"
-          v-model="searchCondition.level" 
-          variant="outlined" 
-          hide-details 
-          class="search-theme"
+          <v-select
+            label="級別"
+            :items="levelList"
+            item-title="name"
+            item-value="level"
+            v-model="searchCondition.level"
+            variant="outlined"
+            hide-details
+            class="search-theme"
           ></v-select>
         </v-col>
         <v-col>
-          <v-select 
-          label="當年繳費況狀" 
-          :items="paymentStatusList" 
-          item-title="name"
-          item-value="value"
-          v-model="searchCondition.paymentStatus" 
-          variant="outlined" 
-          hide-details 
-          class="search-theme"
+          <v-select
+            label="當年繳費況狀"
+            :items="paymentStatusList"
+            item-title="name"
+            item-value="value"
+            v-model="searchCondition.paymentStatus"
+            variant="outlined"
+            hide-details
+            class="search-theme"
           ></v-select>
         </v-col>
         <v-col>
-          <v-select label="顯示筆數" 
-          :items="listAmount" 
-          v-model="searchCondition.pageSize" 
-          variant="outlined" 
-          hide-details 
-          class="search-theme"
+          <v-select
+            label="顯示筆數"
+            :items="listAmount"
+            v-model="searchCondition.size"
+            variant="outlined"
+            hide-details
+            class="search-theme"
           ></v-select>
         </v-col>
         <v-col class="d-flex align-center">
@@ -66,26 +60,11 @@
     </v-form>
     <v-row>
       <v-col class="text-right">
-        <v-btn color="primary" flat @click="addMember()">
-          新增會員
-        </v-btn>
+        <v-btn color="primary" flat @click="addMember()"> 新增會員 </v-btn>
       </v-col>
     </v-row>
 
-    <!-- 國教院的範本，如果要使用這個範本整段打開就可以用了，記得要把下面的 pagination 關起來 -->
-    <!-- <div class="mt-7 d-flex align-end justify-space-between">
-      <v-row class="align-center" no-gutters>
-        <p class="mb-0 mr-2">共{{ paginations.totalCount }}筆</p>
-        <v-col>
-          <PaginationComponent
-            :pageLength="paginations.totalPages"
-            :current-page="paginations.currentPage"
-            @get-list="searchGroupMemberList"
-            @set-page="setPage"
-          ></PaginationComponent>
-        </v-col>
-      </v-row>
-    </div> -->
+    
 
     <v-table class="mt-4" :height="tableItems.length > 10 ? '550px' : ''" :fixed-header="tableItems.length > 10 ? true : false">
       <thead>
@@ -107,23 +86,23 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in tableItems" :key="item.frontUserId" class="hover-effect">
-          <td class="no-wrap">{{ item.frontUserId }}</td>
+          <td class="no-wrap">{{ truncateText(item.frontUserId,16) }}</td>
           <td class="no-wrap position-relative">
             <div class="paymentFalse" v-if="item.paymentStatus === 0">
               <v-icon class="icon" icon="mdi mdi-exclamation" size="8px" color="white"></v-icon>
             </div>
             <div :class="['lvColor text-center', getLvColor(item)]">{{ convertLevel(item.level) }}</div>
           </td>
-          <td class="no-wrap">{{ item.chineseName }}</td>
-          <td class="no-wrap">{{ item.responsiblePersonName }}</td>
-          <td class="no-wrap">{{ item.mainAddressCity + item.mainAddressDistrict + item.mainAddressDetail }}</td>
-          <td class="no-wrap">{{ item.email }}</td>
+          <td class="no-wrap">{{ truncateText(item.chineseName,16) }}</td>
+          <td class="no-wrap">{{ truncateText(item.responsiblePersonName,10) }}</td>
+          <td class="no-wrap">{{ truncateText(item.mainAddressCity + item.mainAddressDistrict + item.mainAddressDetail,30) }}</td>
+          <td class="no-wrap">{{ truncateText(item.email,25) }}</td>
           <td :class="getStatusClass(item.paymentStatus)" class="no-wrap">
             <v-chip :color="item.statusColor" :class="getStatusClass(item.paymentStatus)" variant="text">
               {{ convertPaymentStatus(item.paymentStatus) }}
             </v-chip>
           </td>
-          
+
           <td class="no-wrap text-right">
             <v-btn variant="outlined" class="text-style" @click="getGroupDetail(item.frontUserId)">編輯</v-btn>
             <v-btn variant="text" class="text-style" @click="getPaymentHistory(item)">繳費紀錄</v-btn>
@@ -151,8 +130,8 @@ import PaginationComponent from '@/components/PaginationComponent.vue';
 import Swal from '@/utils/sweetAlert';
 import userPagePermissionSrv from '@/service/userPagePermission.js';
 import LoadingComponent from '@/components/LoadingComponent.vue';
-import groupMemSrv from '@/service/groupMember.js'
-import dropSrv from '@/service/dropdowns.js'
+import groupMemSrv from '@/service/groupMember.js';
+import dropSrv from '@/service/dropdowns.js';
 
 export default {
   components: {
@@ -166,7 +145,7 @@ export default {
         frontUserId: '',
         name: '',
         level: null,
-        paymentStatus: null,
+        paymentStatus: '',
         sortBy: 'createdAt',
         sortDirection: 'DESC',
         currentPage: 1,
@@ -184,13 +163,13 @@ export default {
           title: '證號',
           value: '',
           sort: '',
-          width: '10%'
+          width: '5%'
         },
         {
           title: '級別',
           value: '',
           sort: '',
-          width: '10%'
+          width: '5%'
         },
         {
           title: '團體中文名稱',
@@ -221,15 +200,15 @@ export default {
           value: '',
           sort: '',
           width: '10%'
-        },
+        }
       ],
-      listAmount: [10, 50, 100, 500],
+      listAmount: [1, 10, 50, 100, 500],
       pagePermissions: [],
       levelList: [],
-      paymentStatusList:[
+      paymentStatusList: [
         {
           name: '全部',
-          value: null
+          value: ''
         },
         {
           name: '已繳費',
@@ -242,22 +221,49 @@ export default {
       ]
     };
   },
+  setup() {
+    const groupStore = useGroupStore();
+    const { searchCondition, paginations } = storeToRefs(groupStore);
+
+    return { groupStore, searchCondition, paginations };
+  },
   created() {
     // const store = useEditdbStore();
     // const { searchCondition, editViewTableItem, paginations, checkItem, allWordIds } = storeToRefs(store);
     // // 搜尋欄位狀態儲存
   },
-  watch: {
-    
-  },
+  watch: {},
   mounted() {
-    this.searchGroupMemberList()
-    this.getGroupLevelList()
+    this.searchGroupMemberList();
+    this.getGroupLevelList();
+    const groupStore = useGroupStore();
+
+    // 如果要根據 Store 資料重新渲染頁面
+    if (groupStore.searchCondition) {
+      this.searchCondition = { ...groupStore.searchCondition };
+    }
+    if (groupStore.paginations) {
+      this.paginations = { ...groupStore.paginations };
+    }
+    if (groupStore.tableItems) {
+      this.tableItems = [...groupStore.tableItems];
+    }
   },
   methods: {
-    async searchGroupMemberList(){
-      this.loading = true
-      try{
+    async searchGroupMemberList() {
+      this.loading = true;
+      const groupStore = useGroupStore();
+      try {
+        // const params = {
+        //   page: this.paginations.currentPage || 1,
+        //   size: this.searchCondition.size || 10,
+        //   sortField: 'created_at',
+        //   sortOrder: 'DESC',
+        //   frontUserId: this.searchCondition.frontUserId || '',
+        //   name: this.searchCondition.name || '',
+        //   level: this.searchCondition.level || null,
+        //   paymentStatus: this.searchCondition.paymentStatus || null
+        // };
         const frontUserId = this.searchCondition.frontUserId || ''
         const name = this.searchCondition.name || ''
         const level = this.searchCondition.level || ''
@@ -266,15 +272,43 @@ export default {
         const pageSize = this.searchCondition.size || 10;
         const sortField = 'created_at'
         const sortOrder = 'DESC'
-        
-        await groupMemSrv.searchGroupMemberList(currentPage, pageSize, sortField, sortOrder).then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
+        const params = {
+          frontUserId,
+          name,
+          level,
+          paymentStatus,
+          currentPage,
+          pageSize,
+          sortField,
+          sortOrder
+        };
+        await groupMemSrv.searchGroupMemberList(params).then((res) => {
+          if (!res.isSuccess) {
+            // api 回傳失敗
+            Swal.fire({
+              toast: true,
+              position: 'center',
+              title: `${res.data.rtnMsg}`,
+              confirmButtonColor: '#0E2A34',
+              confirmButtonText: '確認',
+              background: '#F0F0F2',
+              width: 400
+            });
+          } else {
+            // api 回傳成功
             // rtnCode 為 0000 的情況
-            if(res.data.rtnCode === '0000'){
-              this.tableItems = res.data.data
-            }else{
-              // rtnCode 不為 0000 的情況
+            if (res.data.rtnCode === '0000') {
+              this.tableItems = res.data.data;
+              this.paginations.currentPage = res.data.pagination.currentPage;
+                this.paginations.totalPages = res.data.pagination.totalPages;
+                this.paginations = {
+          ...this.paginations,
+          currentPage: res.data.pagination.currentPage,
+          totalPages: res.data.pagination.totalPages,
+          totalCount: res.data.pagination.totalCount,};
+          groupStore.setTableItems(res.data.data);
+          groupStore.setPaginations(this.paginations);
+            } else {
               Swal.fire({
                 toast: true,
                 position: 'center',
@@ -285,26 +319,9 @@ export default {
                 width: 400
               });
             }
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
           }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
         });
-      }catch(error){
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -314,9 +331,12 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+        this.loading = false;
       }
     },
-    addMember(){
+    addMember() {
       this.$router.push({
         path: '/admin/groupView',
         query: {
@@ -324,94 +344,38 @@ export default {
         }
       });
     },
-    async getGroupLevelList(){
-      this.loading = true
-      try{
-        await dropSrv.getPersonalLevelList().then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
-            // rtnCode 為 0000 的情況
-            this.levelList = res.data.data
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
-          }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
-        });
-      }catch(error){
-        Swal.fire({
-          toast: true,
-          position: 'center',
-          title: `${error}`,
-          confirmButtonColor: '#0E2A34',
-          confirmButtonText: '確認',
-          background: '#F0F0F2',
-          width: 400
-        });
-      }
-    },
-    async getGroupDetail(id){
-      this.loading = true
-      try{
-        await groupMemSrv.getGroupMemberDetail(id).then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
-            // rtnCode 為 0000 的情況
-            if(res.data.rtnCode === '0000'){
-              const store = useGroupStore();
-              store.updateEditData(res.data.data)
-// console.log(res.data.data)
-              this.$router.push({
-                path: '/admin/groupView',
-                query: {
-                  action: 'edit'
-                }
-              });
-            }else{
-              // rtnCode 不為 0000 的情況
+    async getGroupLevelList() {
+      this.loading = true;
+      try {
+        await dropSrv
+          .getGroupLevelList()
+          .then((res) => {
+            // api 回傳成功
+            if (res.isSuccess) {
+              // rtnCode 為 0000 的情況
+              this.levelList = res.data.data;
+            } else {
+              // api 回傳失敗
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.rtnMsg}`,
+                title: `${res.data.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',
                 width: 400
               });
             }
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
-          }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
-        });
-      }catch(error){
+          })
+          .catch((error) => {
+            // 處理錯誤情況
+            console.error('Error:', error);
+          })
+          .finally(() => {
+            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+            this.loading = false;
+          });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -423,75 +387,142 @@ export default {
         });
       }
     },
-    deleteGroupMemberCheck(id){
+    async getGroupDetail(id) {
+      this.loading = true;
+      try {
+        await groupMemSrv
+          .getGroupMemberDetail(id)
+          .then((res) => {
+            // api 回傳成功
+            if (res.isSuccess) {
+              // rtnCode 為 0000 的情況
+              if (res.data.rtnCode === '0000') {
+                const store = useGroupStore();
+                store.updateEditData(res.data.data);
+                // console.log(res.data.data)
+                this.$router.push({
+                  path: '/admin/groupView',
+                  query: {
+                    action: 'edit'
+                  }
+                });
+              } else {
+                // rtnCode 不為 0000 的情況
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                });
+              }
+            } else {
+              // api 回傳失敗
+              Swal.fire({
+                toast: true,
+                position: 'center',
+                title: `${res.data.data.rtnMsg}`,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
+              });
+            }
+          })
+          .catch((error) => {
+            // 處理錯誤情況
+            console.error('Error:', error);
+          })
+          .finally(() => {
+            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+            this.loading = false;
+          });
+      } catch (error) {
+        Swal.fire({
+          toast: true,
+          position: 'center',
+          title: `${error}`,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400
+        });
+      }
+    },
+    deleteGroupMemberCheck(id) {
       Swal.fire({
         toast: true,
         position: 'center',
         title: `是否確定要刪除此會員?`,
         confirmButtonText: '確認',
 
-        showCancelButton : true,
+        showCancelButton: true,
         cancelButtonText: '取消'
-
       }).then((result) => {
-        if(result.isConfirmed){
-          this.deleteGroup(id)
+        if (result.isConfirmed) {
+          this.deleteGroup(id);
         }
       });
     },
-    async deleteGroup(id){
-      this.loading = true
-      try{
-        await groupMemSrv.deleteGroup(id).then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
-            // rtnCode 為 0000 的情況
-            if(res.data.rtnCode === '0000'){
+    async deleteGroup(id) {
+      this.loading = true;
+      try {
+        await groupMemSrv
+          .deleteGroup(id)
+          .then((res) => {
+            // api 回傳成功
+            if (res.isSuccess) {
+              // rtnCode 為 0000 的情況
+              if (res.data.rtnCode === '0000') {
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    this.searchGroupMemberList();
+                  }
+                });
+              } else {
+                // rtnCode 不為 0000 的情況
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                });
+              }
+            } else {
+              // api 回傳失敗
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.rtnMsg}`,
-                confirmButtonColor: '#0E2A34',
-                confirmButtonText: '確認',
-                background: '#F0F0F2',
-                width: 400
-              }).then((result) => {
-                if(result.isConfirmed){
-                  this.searchGroupMemberList()
-                }
-              });
-            }else{
-              // rtnCode 不為 0000 的情況
-              Swal.fire({
-                toast: true,
-                position: 'center',
-                title: `${res.data.rtnMsg}`,
+                title: `${res.data.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',
                 width: 400
               });
             }
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
-          }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
-        });
-      }catch(error){
+          })
+          .catch((error) => {
+            // 處理錯誤情況
+            console.error('Error:', error);
+          })
+          .finally(() => {
+            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+            this.loading = false;
+          });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -503,55 +534,59 @@ export default {
         });
       }
     },
-    async getPaymentHistory(item){
-      const id = item.frontUserId
+    async getPaymentHistory(item) {
+      const id = item.frontUserId;
       const userData = {
         frontUserId: id,
-        chineseName: item.chineseName,
-      }
-      this.loading = true
-      try{
-        await groupMemSrv.getPaymentHistory(id).then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
-            // rtnCode 為 0000 的情況
-            if(res.data.rtnCode === '0000'){
-              const store = useGroupStore();
-              store.updateUserData(userData);
-              store.updatePaymentData(res.data.data);
-              this.$router.push('/admin/groupPaymentView');
-            }else{
-              // rtnCode 不為 0000 的情況
+        chineseName: item.chineseName
+      };
+      this.loading = true;
+      try {
+        await groupMemSrv
+          .getPaymentHistory(id)
+          .then((res) => {
+            // api 回傳成功
+            if (res.isSuccess) {
+              // rtnCode 為 0000 的情況
+              if (res.data.rtnCode === '0000') {
+                const store = useGroupStore();
+                store.updateUserData(userData);
+                store.updatePaymentData(res.data.data);
+                this.$router.push('/admin/groupPaymentView');
+              } else {
+                // rtnCode 不為 0000 的情況
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                });
+              }
+            } else {
+              // api 回傳失敗
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.rtnMsg}`,
+                title: `${res.data.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',
                 width: 400
               });
             }
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
-          }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
-        });
-      }catch(error){
+          })
+          .catch((error) => {
+            // 處理錯誤情況
+            console.error('Error:', error);
+          })
+          .finally(() => {
+            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+            this.loading = false;
+          });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -563,69 +598,102 @@ export default {
         });
       }
     },
-    convertPaymentStatus(status){
-      switch(status){
+    convertPaymentStatus(status) {
+      switch (status) {
         case 0:
-          return '未繳費'
+          return '未繳費';
         case 1:
-          return '已繳費'
+          return '已繳費';
         default:
-          return ''
+          return '';
       }
     },
-    clearSearch(){
+    initializePage() {
+      // 檢查是否有保存的狀態
+      const groupStore = useGroupStore();
+      if (groupStore.searchCondition.frontUserId || groupStore.tableItems.length) {
+        this.searchCondition = { ...groupStore.searchCondition };
+        this.paginations = { ...groupStore.paginations };
+        this.tableItems = [...groupStore.tableItems];
+      } else {
+        // 如果無狀態則執行初始資料加載
+        this.searchGroupMemberList();
+      }
+    },
+    clearSearch() {
       this.searchCondition = {
         frontUserId: '',
         name: '',
         level: null,
-        paymentStatus: null,
+        paymentStatus: '',
         sortBy: 'createdAt',
         sortDirection: 'DESC',
         currentPage: 1,
-        pageSize: 500
-      }
+        pageSize: 10
+      };
     },
-    convertLevel(status){
-      switch(status){
+    convertLevel(status) {
+      switch (status) {
         case 1:
-          return '電級'
+          return '電級';
         case 2:
-          return '機級'
+          return '機級';
         case 3:
-          return '工級'
-        case 4: 
-          return '程級'
+          return '工級';
+        case 4:
+          return '程級';
         default:
-          return ''
+          return '';
       }
     },
     getStatusClass(status) {
-      return status === 1 ? 'paid' : 'unpaid'
+      return status === 1 ? 'paid' : 'unpaid';
+    },
+    truncateText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+      }
+      return text;
     },
     getLvColor(item) {
-      if (item.paymentStatus === 0) {
-        return 'bg-gray'
+      if (item.paymentStatus === '') {
+        return 'bg-gray';
       }
       switch (item.level) {
         case 4:
-          return 'bg-light-blue'
+          return 'bg-light-blue';
         case 1:
-          return 'bg-yellow'
+          return 'bg-yellow';
         case 2:
-          return 'bg-green'
+          return 'bg-green';
         case 3:
-          return 'bg-blue'
+          return 'bg-blue';
         default:
-          return ''
+          return '';
       }
     },
+    // setPage(page) {
+    //   const store = useEditdbStore();
+    //   this.paginations.currentPage = page;
+    //   store.updateCurrentPage(page);
+    // },
     setPage(page) {
-      const store = useEditdbStore();
+      if (this.paginations.currentPage === page) {
+        console.log('點擊了同一頁，無需更新');
+        return;
+      }
+
+      // 更新當前頁碼
       this.paginations.currentPage = page;
-      store.updateCurrentPage(page);
+
+      // 調用 API 請求
+      this.searchGroupMemberList();
+
+      // 日誌方便檢查
+      console.log('更新分頁', this.paginations);
     },
     transformDate(date) {
-      if (date) { 
+      if (date) {
         const year = date.getFullYear();
         let month = date.getMonth() + 1;
         let day = date.getDate();
@@ -667,13 +735,12 @@ export default {
           this.pagePermissions.push(i.permissionId);
         });
       });
-    },
+    }
   }
 };
 </script>
 
 <style lang="scss" scoped>
-
 .flex-container {
   margin-top: 10px;
   display: flex;
@@ -735,22 +802,22 @@ export default {
 }
 
 .bg-green {
-  background-color: #6fbe9f !important;; 
+  background-color: #6fbe9f !important;
 }
 
 .bg-blue {
-  background-color: #5860B0 !important;
+  background-color: #5860b0 !important;
 }
 
-.bg-light-blue{
-  background-color: #6FA8D1 !important;
+.bg-light-blue {
+  background-color: #6fa8d1 !important;
 }
 .bg-yellow {
-  background-color: #FCAF15 !important;
+  background-color: #fcaf15 !important;
 }
 
 .bg-gray {
-  background-color: #C0C0C0 !important;; 
+  background-color: #c0c0c0 !important;
 }
 .content {
   padding: 3px 0px 3px 0px;
@@ -777,24 +844,24 @@ export default {
   color: #ff2424;
 }
 .custom-pagination {
-  justify-content: start ;
+  justify-content: start;
   width: 50%;
   margin: 20px 0px 0px 0px;
 }
 
-:deep(.v-btn.v-btn--density-default){
+:deep(.v-btn.v-btn--density-default) {
   /* height: calc(var(--v-btn-height) - 4px); */
-  height:none;
+  height: none;
   /* width: calc(var(--v-btn-height)); */
 }
-:deep(.v-pagination__list){
+:deep(.v-pagination__list) {
   justify-content: start;
   padding: 0px;
 }
 
-:deep(.v-pagination__item--is-active){
+:deep(.v-pagination__item--is-active) {
   background-color: #111;
-  color:#fff;
+  color: #fff;
   border-radius: 4px;
 }
 
@@ -811,9 +878,9 @@ export default {
   position: relative;
 }
 
-.paymentFalse{
+.paymentFalse {
   position: absolute;
-  background-color: #FF2424;
+  background-color: #ff2424;
   width: 17px;
   height: 17px;
   border-radius: 100px;
@@ -821,7 +888,7 @@ export default {
   top: 3px;
   left: 5px;
 
-  :deep(.icon){
+  :deep(.icon) {
     margin-top: -3px;
   }
 }

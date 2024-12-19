@@ -1,7 +1,6 @@
 <template>
   <!-- 季刊=會勘=quarterly -->
   <v-form v-model="valid" v-if="!hasResult">
-    
     <!-- 填寫註記 -->
     <v-row class="pa-4 justify-center">
       <v-col cols="4">
@@ -10,7 +9,7 @@
           <v-row>
             <v-col cols="12">
               <div class="bold mb-2">繳費年度</div>
-                <v-select
+              <v-select
                 v-model="paymentItem.paymentYear"
                 hide-details="auto"
                 :items="paymentYearList"
@@ -18,12 +17,12 @@
                 clearable
                 density="compact"
                 variant="outlined"
-                ></v-select>
+              ></v-select>
             </v-col>
 
             <v-col cols="12">
               <div class="bold mb-2">會員級別</div>
-                <v-select
+              <v-select
                 v-model="paymentItem.level"
                 hide-details="auto"
                 placeholder="請選擇級別"
@@ -31,18 +30,18 @@
                 clearable
                 density="compact"
                 variant="outlined"
-                ></v-select>
+              ></v-select>
             </v-col>
 
             <v-col cols="12">
               <div class="bold mb-2">會員名單</div>
-              <v-text-field 
-              v-model="paymentItem.dynamicText" 
-              @input="dynamicSearch(paymentItem.dynamicText, index)"
-              variant="outlined"
-              placeholder="請輸入會員姓名或證號"
-              :loading="paymentItem.textLoading"
-              hide-details
+              <v-text-field
+                v-model="paymentItem.dynamicText"
+                @input="dynamicSearch(paymentItem.dynamicText, index)"
+                variant="outlined"
+                placeholder="請輸入會員姓名或證號"
+                :loading="paymentItem.textLoading"
+                hide-details
               >
                 <template v-for="selectedDynamicItem in paymentItem.frontUserIds">
                   <v-chip>
@@ -53,12 +52,19 @@
 
                 <v-menu activator="parent">
                   <v-list v-if="dynamicList.length > 0">
+                    <!-- <v-list-item
+                      v-for="dynamicItem in dynamicList"
+                      v-text="dynamicItem.frontUserId"
+                      color="primary"
+                      @click="addDynamicItem(dynamicItem, index)"
+                    > -->
                     <v-list-item
-                    v-for="dynamicItem in dynamicList"
-                    v-text="dynamicItem.frontUserId"
-                    color="primary"
-                    @click="addDynamicItem(dynamicItem, index)"
+                      v-for="(dynamicItem, index) in dynamicList"
+                      :key="dynamicItem.frontUserId"
+                      color="primary"
+                      @click="addDynamicItem(dynamicItem, index)"
                     >
+                      <v-list-item-title> {{ dynamicItem.frontUserId }} - {{ dynamicItem.chineseName }} </v-list-item-title>
                     </v-list-item>
                   </v-list>
                   <v-list v-if="dynamicList.length === 0">
@@ -66,19 +72,19 @@
                       <v-list-item-title>目前無資料</v-list-item-title>
                     </v-list-item>
                   </v-list>
-                </v-menu>  
+                </v-menu>
               </v-text-field>
             </v-col>
 
             <v-col cols="12">
               <div class="bold mb-2">備註（非必填）</div>
               <v-text-field
-              v-model="paymentItem.comment"
-              hide-details="auto"
-              placeholder="請輸入備註"
-              clearable
-              density="compact"
-              variant="outlined"
+                v-model="paymentItem.comment"
+                hide-details="auto"
+                placeholder="請輸入備註"
+                clearable
+                density="compact"
+                variant="outlined"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -96,7 +102,6 @@
             <v-btn @click="submitPaymentCheck()" color="primary" variant="flat">發布</v-btn>
           </v-col>
         </v-row>
-        
       </v-col>
     </v-row>
   </v-form>
@@ -121,11 +126,11 @@
             <td>{{ resultItem.frontUserId }}{{ resultItem.payerName }}</td>
             <td>
               <span v-if="resultItem.status === '成功'">
-                <v-icon  icon="mdi-check-circle" color="#6FBE9F"></v-icon>
+                <v-icon icon="mdi-check-circle" color="#6FBE9F"></v-icon>
                 {{ resultItem.message }}
               </span>
               <span v-else>
-                <v-icon  icon="mdi-alert" color="#FF2424"></v-icon>
+                <v-icon icon="mdi-alert" color="#FF2424"></v-icon>
                 {{ resultItem.message }}
               </span>
             </td>
@@ -146,53 +151,51 @@
 </template>
 
 <script>
-import Datepicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import paymentSrv from '@/service/payments.js'
-import printSrv from '@/service/print.js'
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import paymentSrv from '@/service/payments.js';
+import printSrv from '@/service/print.js';
 import Swal from '@/utils/sweetAlert';
 import LoadingComponent from '@/components/LoadingComponent.vue';
-import dropSrv from '@/service/dropdowns.js'
+import dropSrv from '@/service/dropdowns.js';
 import PrintInvoice from './PrintInvoice.vue';
 
 export default {
-  setup() {
-   
-  },
+  setup() {},
   components: {
     Datepicker,
-    LoadingComponent,
+    LoadingComponent
   },
   data() {
     return {
       dynamicList: [],
       dynamicText: '',
-      paymentList:[
+      paymentList: [
         {
           paymentYear: '113',
           level: null,
           comment: '',
           dynamicText: '',
-          frontUserIds:[],
-          textLoading: false,
-        },
+          frontUserIds: [],
+          textLoading: false
+        }
       ],
       valid: false,
       loading: false,
-      paymentYearList: ['113','112','111','110'],
-      levelList: ['初級','正級','永級','電級','機級','工級','程級'],
+      paymentYearList: ['113', '112', '111', '110'],
+      levelList: ['初級', '正級', '永級', '電級', '機級', '工級', '程級'],
       hasResult: false,
-      resultList: [],
-    }
+      resultList: []
+    };
   },
   methods: {
-    submitPaymentCheck(){
-      const paymentData = this.paymentList
-      let html = ``
-      for(let i = 0; i < paymentData.length; i++){
-        html += this.convertHTML(paymentData[i], i)
+    submitPaymentCheck() {
+      const paymentData = this.paymentList;
+      let html = ``;
+      for (let i = 0; i < paymentData.length; i++) {
+        html += this.convertHTML(paymentData[i], i);
       }
-      
+
       Swal.fire({
         toast: true,
         position: 'center',
@@ -203,14 +206,13 @@ export default {
         width: 400,
 
         html: html
-
       }).then((result) => {
-        if(result.isConfirmed){
-          this.submitMember()
+        if (result.isConfirmed) {
+          this.submitMember();
         }
       });
     },
-    convertHTML(item, index){
+    convertHTML(item, index) {
       return `
         <div class="mb-4">
           <div class="bold" style="font-size: 20px; font-weight: 600; color: #1b2482;">註記名單${index + 1}</div>
@@ -225,7 +227,9 @@ export default {
           <div>
             <div class="bold mt-2">會員名單</div>
             <div style="border: 1px solid #6E6E6E; padding: 8px; border-radius: 8px; min-height: 30px;">
-              ${item.frontUserIds.map(id => `<span style="background-color: rgba(27, 36, 130, 0.2); padding: 2px 4px;">${id}</span>`).join('')}
+              ${item.frontUserIds
+                .map((id) => `<span style="background-color: rgba(27, 36, 130, 0.2); padding: 2px 4px;">${id}</span>`)
+                .join('')}
             </div>
           </div>
           <div>
@@ -233,54 +237,58 @@ export default {
             <div>${item.comment}</div>
           </div>
         </div>
-      `
+      `;
     },
-    async submitMember(){
-      this.loading = true
+    async submitMember() {
+      this.loading = true;
 
-      try{
-        const submitData = this.paymentList
-        let resCount = 0
+      try {
+        const submitData = this.paymentList;
+        let resCount = 0;
 
-        for(let i = 0; i < submitData.length; i++){
+        for (let i = 0; i < submitData.length; i++) {
           const obj = {
             frontUserIds: submitData[i].frontUserIds,
             paymentYear: submitData[i].paymentYear,
             level: submitData[i].level,
             comment: submitData[i].comment
-          }
-          paymentSrv.getPaymentList(obj).then((res) => {
-            // api 回傳成功
-            if (res.isSuccess) {
-              // rtnCode 為 0000 的情況
-              resCount++
-              res.data.results.forEach(item => {
-                this.resultList.push(item)
-              })
-              if(resCount === submitData.length){
-                this.hasResult = true
+          };
+          paymentSrv
+            .getPaymentList(obj)
+            .then((res) => {
+              // api 回傳成功
+              if (res.isSuccess) {
+                // rtnCode 為 0000 的情況
+                resCount++;
+                res.data.results.forEach((item) => {
+                  this.resultList.push(item);
+                });
+                if (resCount === submitData.length) {
+                  this.hasResult = true;
+                }
+              } else {
+                // api 回傳失敗
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.data.rtnMsg}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                });
               }
-            } else {
-              // api 回傳失敗
-              Swal.fire({
-                toast: true,
-                position: 'center',
-                title: `${res.data.data.rtnMsg}`,
-                confirmButtonColor: '#0E2A34',
-                confirmButtonText: '確認',
-                background: '#F0F0F2',
-                width: 400
-              });
-            }
-          }).catch((error) => {
-            // 處理錯誤情況
-            console.error('Error:', error);
-          }).finally(() => {
-            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-            this.loading = false;
-          });
+            })
+            .catch((error) => {
+              // 處理錯誤情況
+              console.error('Error:', error);
+            })
+            .finally(() => {
+              // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+              this.loading = false;
+            });
         }
-      }catch(error){
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -290,21 +298,20 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
-        this.loading = false
+        this.loading = false;
       }
     },
     async dynamicSearch(keyword, index) {
       if (this.searchTimeout) clearTimeout(this.searchTimeout); // 重置計時器
-      
-      this.searchTimeout = setTimeout(async () => {
 
+      this.searchTimeout = setTimeout(async () => {
         if (keyword === '') {
           this.dynamicList = [];
           return;
         }
-        
+
         try {
-          this.paymentList[index].textLoading = true
+          this.paymentList[index].textLoading = true;
           const res = await printSrv.dynamicSearch(keyword);
 
           // API 回傳成功
@@ -323,7 +330,7 @@ export default {
               confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
               background: '#F0F0F2',
-              width: 400,
+              width: 400
             });
           }
         } catch (error) {
@@ -334,40 +341,39 @@ export default {
         }
       }, 500);
     },
-    async getLevelList(){
-
-    },  
-    addDynamicItem(item, index){
-      this.paymentList[index].frontUserIds.push(item.frontUserId)
-      this.paymentList[index].dynamicText = ''
-      this.dynamicList = []
+    async getLevelList() {},
+    addDynamicItem(item, index) {
+      console.log(item);
+      this.paymentList[index].frontUserIds.push(item.frontUserId);
+      this.paymentList[index].dynamicText = '';
+      this.dynamicList = [];
     },
-    removeSelectedDynamicItem(item, index){
-      this.paymentList[index].frontUserIds = this.paymentList[index].frontUserIds.filter((selectedItem) => selectedItem !== item)
+    removeSelectedDynamicItem(item, index) {
+      this.paymentList[index].frontUserIds = this.paymentList[index].frontUserIds.filter((selectedItem) => selectedItem !== item);
       // this.selectedDynamicList = this.selectedDynamicList.filter((selectedItem) => selectedItem !== item)
     },
-    addPaymentList(){
+    addPaymentList() {
       this.paymentList.push({
         paymentYear: '113',
         level: null,
         comment: '',
         dynamicText: '',
         frontUserIds: [],
-        textLoading: false,
-      })
+        textLoading: false
+      });
     },
-    PrintInvoice(){
-      const printData = []
-      this.resultList.forEach(item => {
-        if(item.status === '成功'){
-          printData.push(item)
+    PrintInvoice() {
+      const printData = [];
+      this.resultList.forEach((item) => {
+        if (item.status === '成功') {
+          printData.push(item);
         }
-      })
+      });
 
-      if(printData.length > 0){
+      if (printData.length > 0) {
         localStorage.setItem('printInvoiceData', JSON.stringify(printData));
         window.open('/admin/printInvoice', '_blank');
-      }else{
+      } else {
         Swal.fire({
           toast: true,
           position: 'center',
@@ -378,13 +384,12 @@ export default {
           width: 400
         });
       }
-      
     },
-    toPrev(){
+    toPrev() {
       this.$router.push('/admin/Member');
     }
   }
-}
+};
 </script>
 
 <style scoped>

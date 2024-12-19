@@ -13,7 +13,7 @@ export const useAuthStore = defineStore({
   }),
   actions: {
     async userLogin(account: string, password: string) {
-      const user = await axiosInstance.post(`/backend-users/login`, { account, password });
+      const user = await axiosInstance.post(`/backend-users/backend/login`, { account, password });
 
       if (user.data.rtnCode !== '0000') {
         return {

@@ -30,7 +30,7 @@
           <v-col cols="12">
             <div class="bold mb-2">分會選擇</div>
             <v-row>
-              <v-col cols="2" v-for="(branchItem, index) in branchList">
+              <v-col cols="3" v-for="(branchItem, index) in branchList">
                 <v-checkbox
                   v-model="formData.branchIds"
                   :value="branchItem.branchId"
@@ -83,7 +83,7 @@
                   v-model="formData.paymentTrueYears"
                   placeholder="請選擇繳費狀況"
                   density="compact"
-                  :items="paymentStatusList"
+                  :items="yearsList"
                   item-title="name"
                   item-value="value"
                   variant="outlined"
@@ -101,7 +101,7 @@
                   v-model="formData.paymentFalseYears"
                   placeholder="請選擇繳費狀況"
                   density="compact"
-                  :items="paymentStatusList"
+                  :items="yearsList"
                   item-title="name"
                   item-value="value"
                   variant="outlined"
@@ -152,10 +152,11 @@
                     <v-list v-if="dynamicList.length > 0">
                       <v-list-item
                         v-for="dynamicItem in dynamicList"
-                        v-text="dynamicItem.frontUserId"
+                        :key="dynamicItem.frontUserId"
                         color="primary"
                         @click="addNotMember(dynamicItem)"
                       >
+                      <v-list-item-title> {{ dynamicItem.frontUserId }} - {{ dynamicItem.chineseName }} </v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -242,10 +243,11 @@
                 <v-list v-if="dynamicList.length > 0">
                   <v-list-item
                     v-for="dynamicItem in dynamicList"
-                    v-text="dynamicItem.frontUserId"
+                    :key="dynamicItem.frontUserId"
                     color="primary"
                     @click="addDynamicItem(dynamicItem)"
                   >
+                  <v-list-item-title> {{ dynamicItem.frontUserId }} - {{ dynamicItem.chineseName }} </v-list-item-title>
                   </v-list-item>
                 </v-list>
               </v-menu>
@@ -327,41 +329,6 @@ export default {
         '通訊地址',
         '電子郵件'
       ],
-      sortList: [
-        {
-          name: '不設限',
-          value: null
-        },
-        {
-          name: '會員證號',
-          value: 'front_user_id'
-        },
-        {
-          name: '會員級別',
-          value: 'level'
-        },
-        {
-          name: '分會',
-          value: 'branch'
-        },
-        {
-          name: '建立日期 ',
-          value: 'create_at'
-        },
-        {
-          name: '更新日期 ',
-          value: 'updated_at'
-        }
-      ],
-      Subscription: [
-        { name: 'N/A', value: 'na' },
-        { name: '已勾選不寄送會刊、資料之會員', value: 'both' },
-        { name: '已勾選不寄送會刊之會員', value: 'magazine' },
-        { name: '已勾選不寄送資料之會員', value: 'info' }
-      ],
-      disabled: [],
-      dynamicList: [],
-      yearsListNumber: ['113', '112', '111', '110', '109', '108', '107'],
       yearsList: [
         {
           name: '不設限',
@@ -388,6 +355,41 @@ export default {
           value: 5
         }
       ],
+      sortList: [
+        {
+          name: '不設限',
+          value: null
+        },
+        {
+          name: '會員證號',
+          value: 'front_user_id'
+        },
+        {
+          name: '會員級別',
+          value: 'level'
+        },
+        {
+          name: '分會',
+          value: 'branch'
+        },
+        {
+          name: '建立日期 ',
+          value: 'created_at'
+        },
+        {
+          name: '更新日期 ',
+          value: 'updated_at'
+        }
+      ],
+      Subscription: [
+        { name: 'N/A', value: 'na' },
+        { name: '已勾選不寄送會刊、資料之會員', value: 'both' },
+        { name: '已勾選不寄送會刊之會員', value: 'magazine' },
+        { name: '已勾選不寄送資料之會員', value: 'info' }
+      ],
+      disabled: [],
+      dynamicList: [],
+      yearsListNumber: ['113', '112', '111', '110', '109', '108', '107'],
       createdAtList: [
         {
           name: '不設限',
@@ -414,7 +416,7 @@ export default {
           value: 5
         }
       ],
-      levelList: ['初級', '正級', '永級', '電級', '機級', '工級', '程級'],
+      levelList: ['初級', '正級', '永級'],
       formData: {
         year: '113',
         branchIds: [],
@@ -619,7 +621,7 @@ export default {
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.data.rtnMsg}`,
+                title: `${res.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',
@@ -645,6 +647,8 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
         this.loading = false;
       }
     },
@@ -673,7 +677,7 @@ export default {
             Swal.fire({
               toast: true,
               position: 'center',
-              title: `${res.data.data.rtnMsg}`,
+              title: `${res.data.rtnMsg}`,
               confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
               background: '#F0F0F2',

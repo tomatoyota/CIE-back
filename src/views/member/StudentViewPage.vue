@@ -21,7 +21,7 @@
                   v-model="formData.chineseName"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
               <v-col cols="6">
@@ -30,7 +30,7 @@
                   v-model="formData.englishName"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -44,7 +44,7 @@
                   v-model="formData.idNumber"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
               <v-col cols="6">
@@ -56,7 +56,7 @@
                   :items="genderList"
                   item-title="name"
                   item-value="value"
-                  variant="plain"
+                  variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -71,7 +71,7 @@
                   :label="formData.birthday"
                   id="id"
                   readonly
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -91,7 +91,7 @@
                   density="compact"
                   item-title="name"
                   item-value="locationId"
-                  variant="plain"
+                  variant="outlined"
                 ></v-select>
               </v-col>
               <v-col cols="4">
@@ -101,7 +101,7 @@
                   density="compact"
                   item-title="name"
                   item-value="locationId"
-                  variant="plain"
+                  variant="outlined"
                 ></v-select>
               </v-col>
               <v-col cols="4">
@@ -109,7 +109,7 @@
                   v-model="formData.mainAddressPostal"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -117,7 +117,7 @@
                   v-model="formData.mainAddressDetail"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -129,7 +129,7 @@
               v-model="formData.mainPhone"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
 
@@ -139,7 +139,7 @@
               v-model="formData.email"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -157,7 +157,7 @@
                   density="compact"
                   item-title="name"
                   item-value="locationId"
-                  variant="plain"
+                  variant="outlined"
                 ></v-select>
               </v-col>
               <v-col cols="4">
@@ -167,7 +167,7 @@
                   density="compact"
                   item-title="name"
                   item-value="locationId"
-                  variant="plain"
+                  variant="outlined"
                 ></v-select>
               </v-col>
               <v-col cols="4">
@@ -175,7 +175,7 @@
                   v-model="formData.secondaryAddressPostal"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -183,7 +183,7 @@
                   v-model="formData.secondaryAddressDetail"
                   readonly
                   density="compact"
-                  variant="plain"
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -195,7 +195,7 @@
               v-model="formData.secondaryPhone"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -209,7 +209,7 @@
               v-model="formData.education"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
 
@@ -219,7 +219,7 @@
               v-model="formData.graduationYear"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
 
@@ -229,7 +229,7 @@
               v-model="formData.schoolMajor"
               readonly
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-text-field>
           </v-col>
 
@@ -242,7 +242,7 @@
               item-title="name"
               item-value="value"
               density="compact"
-              variant="plain"
+              variant="outlined"
             />
           </v-col>
 
@@ -255,7 +255,7 @@
               item-title="name"
               item-value="value"
               density="compact"
-              variant="plain"
+              variant="outlined"
             ></v-select>
           </v-col>
         </v-row>

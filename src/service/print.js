@@ -6,12 +6,12 @@ export default {
             const method = 'POST';
             const url = '/members/export';
             const data = obj;
-            const res = await callApi(method, url, data);
+            const res = await callApi(method, url, data,{ responseType: 'blob' });
             
             return res
 
         }catch(error){
-            return error
+            return { isSuccess: false, error };
         }
     },
     async dynamicSearch(keyword){

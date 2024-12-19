@@ -3,7 +3,7 @@ export default {
         const username = localStorage.getItem('cieebo-admin-user');
 
         if (username) {
-            return JSON.parse(username).backendUserAccount
+            return JSON.parse(username).backendUserId
         }
     },
     getUserLastTimeLogin() {

@@ -24,6 +24,7 @@ function validate(values: any, { setErrors }: any) {
     .then((res: any) => {
       if (!res.isSuccess) {
         setErrors({ apiError: res.msg });
+        router.push('/');
         return;
       }
       Swal.fire({

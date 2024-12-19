@@ -12,7 +12,7 @@
           <v-text-field
             v-model="searchCondition.announcementTitle"
             variant="outlined"
-            label="公告標題"
+            label="標題"
             class="search-theme"
             hide-details
           ></v-text-field>
@@ -84,10 +84,11 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in tableItems" class="hover-effect">
-          <td>{{ item.title }}</td>
+          <td>{{ truncateText(item.title,50) }}</td>
           <td>{{ item.createdBy }}</td>
           <td>{{ formatDate(item.releaseAt) }}</td>
-          <td>{{ formatDate(item.createdAt) }}</td>
+          <!-- <td>{{ formatDate(item.createdAt) }}</td> -->
+          <td>{{ formatDate(item.updatedAt) }}</td>
           <td class="text-center no-wrap" style="width: 400px">
             <a href="#" @click.prevent="editAccouncement(item.announcementsId)">
               <v-tooltip text="編輯最新消息" location="bottom">
@@ -121,7 +122,8 @@ import { userAnnouncementStore } from '@/stores/Announcement.js';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import PaginationComponent from '@/components/PaginationComponent.vue';
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+// import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from '@/utils/sweetAlert';
 import announcementSrv from '@/service/announcement.js';
 import userPagePermissionSrv from '@/service/userPagePermission.js';
 import { useRoute } from 'vue-router';
@@ -145,7 +147,7 @@ export default {
         expiredDate: [],
         currentPage: 1,
         pageSize: 10,
-        sortBy: 'createdAt',
+        sortBy: 'updated_at',
         sortDirection: 'DESC'
       },
       roleName: [],
@@ -153,8 +155,8 @@ export default {
       tableItems: [],
       publishDialog: false,
       roleAccountDialog: false,
-      sortBy: '',
-      sortOrder: '',
+      sortBy: 'updated_at',
+      // sortOrder: 'DESC',
 
       paginations: [
         {
@@ -169,7 +171,7 @@ export default {
           title: '標題',
           value: '',
           sort: '',
-          width: '30%'
+          width: '44%'
         },
         {
           title: '發布單位',
@@ -181,14 +183,20 @@ export default {
           title: '發布日期',
           value: 'release_date',
           sort: '',
-          width: '15%'
+          width: '8%'
         },
 
+        // {
+        //   title: '建立日期',
+        //   value: 'created_at',
+        //   sort: '',
+        //   width: '10%'
+        // },
         {
-          title: '建立日期',
-          value: 'created_at',
+          title: '最後修改日期',
+          value: 'updated_at',
           sort: '',
-          width: '15%'
+          width: '8%'
         },
         {
           title: '',
@@ -339,7 +347,17 @@ export default {
         }
       },
       deep: true
-    }
+    },
+    'searchCondition.updatedAt': {
+      handler(val) {
+        if (val && val[1] !== null) {
+          this.releaseAtInputOptions.rangeSeparator = '-';
+        } else {
+          this.releaseAtInputOptions.rangeSeparator = '';
+        }
+      },
+      deep: true
+    },
   },
   
   methods: {
@@ -366,10 +384,16 @@ export default {
       const day = date.getDate().toString().padStart(2, '0');
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      const formattedDateTime = `${year}/${month}/${day} ${hours}:${minutes}`;
+      // const formattedDateTime = `${year}/${month}/${day} ${hours}:${minutes}`;
+      const formattedDateTime = `${year}/${month}/${day}`;
       return formattedDateTime;
     },
-    
+    truncateText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+      }
+      return text;
+    },
     changeTab(type) {
       this.activeTab = type;
       const store = userAnnouncementStore();
@@ -419,8 +443,9 @@ export default {
       const pageSize = this.searchCondition.pageSize;
 
       // 排序
-      const sortBy = this.searchCondition.sortBy || '';
-      const sortOrder = this.searchCondition.sortDirection || '';
+      // const sortBy = this.searchCondition.sortBy || 'updated_at';
+      const sortBy = 'updated_at';
+      const sortOrder = this.searchCondition.sortDirection || 'DESC';
 
       
       const obj = {
@@ -461,10 +486,9 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
+              // confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
+              // background: '#F0F0F2',
             });
           }
         } else {
@@ -476,7 +500,7 @@ export default {
             confirmButtonColor: '#0E2A34',
             confirmButtonText: '確認',
             background: '#F0F0F2',
-            width: 400
+            width: 300
           });
         }
       }).catch((error) => {
@@ -537,16 +561,28 @@ export default {
 
     async deleteAccouncement(announcementsId) {
       try {
-        const confirmed = await Swal.fire({
-          title: '確定要刪除這項公告嗎？',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: '確定',
-          cancelButtonText: '取消'
-        });
+        const confirmed = await 
+        // Swal.fire({
+          
+        //   title: '確定要刪除這項公告嗎？',
+        //   // icon: 'warning',
+        //   showCancelButton: true,
+        //   // confirmButtonColor: '#3085d6',
+        //   // cancelButtonColor: '#d33',
+        //   confirmButtonText: '確定',
+        //   cancelButtonText: '取消',
+        //   width: 400
+        // });
+        Swal.fire({
+        toast: true,
+        position: 'center',
+        title: `確定要刪除?`,
+        text: '刪除後將無法復原',
+        confirmButtonText: '確認',
 
+        showCancelButton: true,
+        cancelButtonText: '取消'
+      });
         if (confirmed.isConfirmed) {
           // 調用 API 刪除公告
           const res = await announcementSrv.deleteAnnouncement(announcementsId);
@@ -555,9 +591,24 @@ export default {
           if (res.isSuccess && res.data.rtnCode === '0000') {
             // 刪除成功後從 tableItems 中移除該項目
             this.tableItems = this.tableItems.filter(item => item.announcementsId !== announcementsId);
-            Swal.fire('刪除成功', '', 'success');
+            // Swal.fire('刪除成功', '', 'success');
+            Swal.fire({
+        toast: true,
+        position: 'center',
+        title: `刪除成功`,  
+        confirmButtonText: '確認',
+        showCancelButton: false,
+      });
           } else {
-            Swal.fire('刪除失敗', res.data.rtnMsg || '請稍後再試', 'error');
+            // Swal.fire('刪除失敗', res.data.rtnMsg || '請稍後再試', 'error');
+            Swal.fire({
+        toast: true,
+        position: 'center',
+        title: `刪除失敗`,  
+        text: `${res.data.rtnMsg}` || '請稍後再試',
+        confirmButtonText: '確認',
+        showCancelButton: false,
+      });
           }
         }
       } catch (error) {
@@ -600,6 +651,9 @@ export default {
 };
 </script>
 <style lang="scss">
+// .swal-confirm-button{
+//   display: inline-flex !important;
+// }
 .v-btn--disabled.v-btn--variant-elevated .v-btn__overlay {
   opacity: 0;
 }

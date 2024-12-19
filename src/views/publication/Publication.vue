@@ -5,6 +5,18 @@
     <div class="my-2">
       <div class="title">出版品管理</div>
 
+      <!-- <div class="btn-container">
+        <v-btn
+          v-for="button in buttons"
+          :key="button.id"
+          :variant="button.variant"
+          class="custom-btn"
+          @click="handleButtonClick(button.id)"
+          :class="{ active: store.activeButton === button.id }"
+        >
+          {{ button.label }}
+        </v-btn>
+      </div> -->
       <div class="btn-container">
         <v-btn
           v-for="button in buttons"
@@ -21,6 +33,8 @@
       
 
       <div class="custom-table">
+        <!-- <JournalAdminPage v-if="store.activeButton === 2" />
+        <QuarterlyAdminPage v-if="store.activeButton === 1" /> -->
         <JournalAdminPage v-if="activeButton === 2" />
         <QuarterlyAdminPage v-if="activeButton === 1" />
       </div>
@@ -33,6 +47,9 @@
 import { defineComponent } from 'vue'
 import JournalAdminPage from '@/views/admin/AcademicAdminPage.vue'
 import QuarterlyAdminPage from '@/views/admin/QuarterlyAdminPage.vue'
+// import { storeToRefs } from 'pinia';
+import { mapActions, mapState } from 'pinia';
+import { usePublicationStore } from '@/stores/Publication';
 
 
 export default {
@@ -40,20 +57,41 @@ export default {
     JournalAdminPage,
     QuarterlyAdminPage
   },
+  // setup() {
+  //   const store = usePublicationStore();
+  //   // const { handleButtonClick } = storeToRefs(store);
+
+  //   // 將按鈕點擊邏輯與 store 的 action 連結
+  //   const handleButtonClick = (buttonId) => {
+  //     store.setActiveButton(buttonId);
+  //   };
+
+  //   return {
+  //     store,
+  //     handleButtonClick,
+  //   };
+  // },
   data() {
     return {
-      activeButton: 1, // 預設顯示的組件
+      // activeButton: 1, // 預設顯示的組件
       buttons: [
         { id: 1, label: '會刊管理', variant: 'outlined' },
         { id: 2, label: '學刊管理', variant: 'outlined' }
       ]
     }
   },
+  computed: {
+    ...mapState(usePublicationStore, ['activeButton']), // 引用 store 的狀態
+  },
   methods: {
     
+    // handleButtonClick(buttonId) {
+    //   this.activeButton = buttonId
+    // }
+    ...mapActions(usePublicationStore, ['setActiveButton']), // 引用 store 的方法
     handleButtonClick(buttonId) {
-      this.activeButton = buttonId
-    }
+      this.setActiveButton(buttonId); // 更新 Pinia 狀態
+    },
   }
 }
 </script>

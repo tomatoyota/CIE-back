@@ -31,7 +31,6 @@ import messages from '@/utils/locales/messages';
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
-// pinyin-convert
 
 const i18n = createI18n({
   locale: 'en',

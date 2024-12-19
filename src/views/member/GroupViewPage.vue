@@ -113,14 +113,13 @@
             <v-row>
               <v-col cols="4">
                 <div class="bold mb-2"><span class="text-red">*</span>行業別</div>
-                <v-select
+                <v-text-field
                   v-model="formData.industry"
-                  placeholder="請選擇分會"
+                  placeholder="請輸入行業別"
                   density="compact"
-                  :rules="selectRule"
-                  :items="industryList"
+                  :rules="textFieldRule"
                   variant="outlined"
-                ></v-select>
+                ></v-text-field>
               </v-col>
             </v-row>
           </v-col>
@@ -164,7 +163,7 @@
                   placeholder="郵遞區號"
                   density="compact"
                   variant="outlined"
-                  disabled
+                  readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -221,7 +220,6 @@
                 <div class="bold mb-2">負責人職務</div>
                 <v-text-field
                   v-model="formData.responsiblePersonPosition"
-                  :rules="textFieldRule"
                   placeholder="請輸入負責人職務"
                   clearable
                   density="compact"
@@ -250,6 +248,7 @@
               hide-details="auto"
               placeholder="請輸入負責人電子郵件信箱"
               clearable
+              :disabled="pageAction === 'edit'"
               density="compact"
               variant="outlined"
             ></v-text-field>
@@ -258,7 +257,7 @@
           <v-col cols="12">
             <v-row>
               <v-col cols="4">
-                <div class="bold mb-2">聯絡人姓名</div>
+                <div class="bold mb-2"><span class="text-red">*</span>聯絡人姓名</div>
                 <v-text-field
                   v-model="formData.contactName"
                   :rules="textFieldRule"
@@ -301,6 +300,7 @@
               hide-details="auto"
               placeholder="請輸入聯絡人電子郵件信箱"
               clearable
+              :disabled="pageAction === 'edit'"
               density="compact"
               variant="outlined"
             ></v-text-field>
@@ -317,9 +317,9 @@
                   <div class="bold mb-1">姓名</div>
                   <v-text-field
                     v-model="repItem.name"
-                    :rules="textFieldRule"
+                
                     hide-details="auto"
-                    placeholder="請輸入負責人姓名"
+                    placeholder="請輸入會員代表姓名"
                     clearable
                     density="compact"
                     variant="outlined"
@@ -329,9 +329,8 @@
                   <div class="bold mb-1">職務</div>
                   <v-text-field
                     v-model="repItem.position"
-                    :rules="textFieldRule"
                     hide-details="auto"
-                    placeholder="請輸入負責人職務"
+                    placeholder="請輸入會員代表職務"
                     clearable
                     density="compact"
                     variant="outlined"
@@ -342,9 +341,8 @@
                   <div class="bold mb-1">電話</div>
                   <v-text-field
                     v-model="repItem.phone"
-                    :rules="textFieldRule"
                     hide-details="auto"
-                    placeholder="請輸入負責人職務"
+                    placeholder="請輸入會員代表電話"
                     clearable
                     density="compact"
                     variant="outlined"
@@ -355,9 +353,8 @@
                   <div class="bold mb-1">電子郵件信箱</div>
                   <v-text-field
                     v-model="repItem.email"
-                    :rules="textFieldRule"
                     hide-details="auto"
-                    placeholder="請輸入負責人職務"
+                    placeholder="請輸入會員代表電子信箱"
                     clearable
                     density="compact"
                     variant="outlined"
@@ -393,7 +390,7 @@ import { ref, computed, watch } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import groupMemSrv from '@/service/groupMember.js';
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from '@/utils/sweetAlert';
 import LoadingComponent from '@/components/LoadingComponent.vue';
 import dropSrv from '@/service/dropdowns.js';
 import { storeToRefs } from 'pinia';
@@ -420,7 +417,7 @@ export default {
         entryDate: '',
         applicationDate: '',
         approvalDate: '',
-        industry: null,
+        industry: '',
         mainAddressCity: null,
         mainAddressDistrict: null,
         mainAddressPostal: '',
@@ -494,16 +491,45 @@ export default {
     this.getGroupLevelList();
   },
   watch: {
+    // 'formData.mainAddressCity': {
+    //   handler(val) {
+    //     const matchCity = this.cityList.find((city) => city.locationId === val);
+    //     const districtList = matchCity.children;
+    //     const mainPostal = matchCity.postalCode;
+    //     this.districtList = districtList;
+    //     this.formData.mainAddressPostal = mainPostal;
+    //   },
+    //   deep: true
+    // }
     'formData.mainAddressCity': {
       handler(val) {
+        // 當選中城市時
         const matchCity = this.cityList.find((city) => city.locationId === val);
-        const districtList = matchCity.children;
-        const mainPostal = matchCity.postalCode;
-        this.districtList = districtList;
-        this.formData.mainAddressPostal = mainPostal;
+        if (matchCity) {
+          const districtList = matchCity.children || [];
+          this.districtList = districtList;
+          this.formData.mainAddressDistrict = null;
+        } else {
+          // 如果沒找到對應城市，清空相關數據
+          this.districtList = [];
+          this.formData.mainAddressDistrict = null;
+          this.formData.mainAddressPostal = '';
+        }
+      },
+
+      deep: true
+    },
+    'formData.mainAddressDistrict': {
+      handler(val) {
+        const selectedDistrict = this.districtList.find((district) => district.locationId === val);
+        if (selectedDistrict) {
+          this.formData.mainAddressPostal = selectedDistrict.postalCode;
+        } else {
+          this.formData.mainAddressPostal = '';
+        }
       },
       deep: true
-    }
+    },
   },
   methods: {
     setPage() {
@@ -545,6 +571,48 @@ export default {
             phone: rep.phone || '',
             email: rep.email || ''
           }));
+
+          // 帶入主要地址
+        const mainAddressCity = editData.Organizations[0].mainAddressCity;
+        const mainAddressDistrict = editData.Organizations[0].mainAddressDistrict;
+        const mainAddressPostal = editData.Organizations[0].mainAddressPostal;
+
+        console.log('Initial Main Address District:', mainAddressDistrict);
+
+        this.formData.mainAddressCity = mainAddressCity;
+
+        this.$nextTick(() => {
+          const matchCity = this.cityList.find((city) => city.locationId === this.formData.mainAddressCity);
+          if (matchCity) {
+            this.districtList = matchCity.children || [];
+            console.log('Updated District List:', this.districtList);
+
+            // 使用事先複製的值
+            const districtExists = this.districtList.some((district) => String(district.locationId) === String(mainAddressDistrict));
+            console.log('District Exists:', districtExists);
+
+            if (districtExists) {
+              this.formData.mainAddressDistrict = mainAddressDistrict;
+              console.log('FormData Main Address District:', this.formData.mainAddressDistrict);
+
+              // 在這裡安全地找到 selectedDistrict
+              const selectedDistrict = this.districtList.find(
+                (district) => String(district.locationId) === String(this.formData.mainAddressDistrict)
+              );
+
+              if (selectedDistrict) {
+                this.formData.mainAddressPostal = selectedDistrict.postalCode || '';
+                console.log('FormData Main Address Postal:', this.formData.mainAddressPostal);
+              } else {
+                console.error('Selected district not found in districtList!');
+              }
+            } else {
+              console.error('District not found in districtList!');
+            }
+          } else {
+            console.error('City not found in cityList!');
+          }
+        });
         }
       }
 

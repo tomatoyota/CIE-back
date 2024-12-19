@@ -2,7 +2,7 @@
   <div class="relative">
     <v-form>
       <v-row class="py-4">
-        <v-col>
+        <!-- <v-col>
           <v-text-field
             v-model="searchCondition.studentId"
             variant="outlined"
@@ -10,24 +10,12 @@
             hide-details
             class="search-theme"
           ></v-text-field>
+        </v-col> -->
+        <v-col>
+          <v-text-field v-model="searchCondition.name" variant="outlined" label="姓名" hide-details class="search-theme"></v-text-field>
         </v-col>
         <v-col>
-          <v-text-field
-            v-model="searchCondition.name"
-            variant="outlined"
-            label="姓名"
-            hide-details
-            class="search-theme"
-          ></v-text-field>
-        </v-col>
-        <v-col>
-          <v-text-field
-            v-model="searchCondition.email"
-            variant="outlined"
-            label="Email"
-            hide-details
-            class="search-theme"
-          ></v-text-field>
+          <v-text-field v-model="searchCondition.email" variant="outlined" label="Email" hide-details class="search-theme"></v-text-field>
         </v-col>
         <v-col>
           <v-select
@@ -56,18 +44,16 @@
             <v-btn class="w-100" flat color="error" @click="clearSearch()">清除</v-btn>
           </v-col>
           <v-col class="py-0 pl-2 pr-0">
-            <v-btn class="w-100" flat color="success" @click="searchGroupMemberList(1)"
-              >搜尋</v-btn
-            >
+            <v-btn class="w-100" flat color="success" @click="searchStudentMember">搜尋</v-btn>
           </v-col>
         </v-col>
       </v-row>
     </v-form>
-    <v-row>
+    <!-- <v-row>
       <v-col class="text-right">
         <v-btn color="primary" flat @click="addMember()"> 新增會員 </v-btn>
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-table
       class="mt-4 mb-2"
       :height="paginatedItems.length > 10 ? '550px' : ''"
@@ -82,31 +68,20 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in tableItems" class="hover-effect">
-          <td class="no-wrap">{{ item.studentId }}</td>
-          <td class="no-wrap">{{ item.chineseName }}</td>
-          <td class="no-wrap">{{ item.email }}</td>
+          <td class="no-wrap">{{ truncateText(item.studentId,16) }}</td>
+          <td class="no-wrap">{{ truncateText(item.chineseName,8) }}</td>
+          <td class="no-wrap">{{ truncateText(item.email,30) }}</td>
           <td class="no-wrap">{{ formatDate(item.createdAt) }}</td>
           <td class="no-wrap">
             <!-- 待修改 -->
             <v-chip variant="text"
-              ><v-icon :style="{ color: getStatusColor(item.reviewStatus) }"
-                >mdi mdi-circle-medium</v-icon
+              ><v-icon :style="{ color: getStatusColor(item.reviewStatus) }">mdi mdi-circle-medium</v-icon
               >{{ getStatusText(item.reviewStatus) }}</v-chip
             >
           </td>
           <td class="no-wrap">
-            <v-btn
-              variant="outlined"
-              class="text-style"
-              @click="setPersonalID(item.studentId)"
-              >設定代號</v-btn
-            >
-            <v-btn
-              variant="text"
-              class="text-style"
-              @click="getStudentDetail(item.studentId)"
-              >查看申請表</v-btn
-            >
+            <v-btn variant="outlined" class="text-style" @click="setPersonalID(item.studentId)">設定代號</v-btn>
+            <v-btn variant="text" class="text-style" @click="getStudentDetail(item.studentId)">查看申請表</v-btn>
             <!-- <a href="#" @click.prevent="getStudentItems(item.studentId)"
               ><v-tooltip text="查看申請表" location="bottom">
                 <template v-slot:activator="{ props }">
@@ -115,9 +90,7 @@
                   >
                 </template>
               </v-tooltip></a> -->
-            <v-btn variant="text" class="text-style" @click="deleteCheck(item.studentId)"
-              >刪除申請</v-btn
-            >
+            <v-btn variant="text" class="text-style" @click="deleteCheck(item.studentId)">刪除申請</v-btn>
           </td>
         </tr>
       </tbody>
@@ -129,56 +102,44 @@
       @get-list="searchStudentMember"
       @set-page="setPage"
     ></PaginationComponent>
-    <!-- 國教院的範本，如果要使用這個範本整段打開就可以用了，記得要把下面的 pagination 關起來 -->
-    <!-- <div class="mt-7 d-flex align-end justify-space-between">
-      <v-row class="align-center" no-gutters>
-        <p class="mb-0 mr-2">共{{ paginations.totalCount }}筆</p>
-        <v-col>
-          <PaginationComponent
-            :pageLength="paginations.totalPages"
-            :current-page="paginations.currentPage"
-            @get-list="searchStudentMember"
-            @set-page="setPage"
-          ></PaginationComponent>
-        </v-col>
-      </v-row>
-    </div> -->
+   
   </div>
   <LoadingComponent :loading="loading" />
 </template>
 
 <script>
-import { storeToRefs } from "pinia";
-import { studentStore } from "@/stores/student.js";
-import { defineComponent } from "vue";
-import studentSrv from "@/service/studentMember.js";
-import Swal from "@/utils/sweetAlert";
-import PaginationComponent from "@/components/PaginationComponent.vue";
-import LoadingComponent from "@/components/LoadingComponent.vue";
-import transform from "ant-design-vue/es/_util/cssinjs/transformers/legacyLogicalProperties";
+import { storeToRefs } from 'pinia';
+import { studentStore } from '@/stores/student.js';
+import { defineComponent } from 'vue';
+import studentSrv from '@/service/studentMember.js';
+import Swal from '@/utils/sweetAlert';
+import PaginationComponent from '@/components/PaginationComponent.vue';
+import LoadingComponent from '@/components/LoadingComponent.vue';
+import transform from 'ant-design-vue/es/_util/cssinjs/transformers/legacyLogicalProperties';
 
 export default {
   components: {
     PaginationComponent,
-    LoadingComponent,
+    LoadingComponent
   },
   data() {
     return {
       tab: 3,
       buttons: [
-        { id: 1, label: "會員列表", variant: "outlined" },
-        { id: 2, label: "資料列印", variant: "outlined" },
-        { id: 3, label: "年費繳交註記", variant: "outlined" },
+        { id: 1, label: '會員列表', variant: 'outlined' },
+        { id: 2, label: '資料列印', variant: 'outlined' },
+        { id: 3, label: '年費繳交註記', variant: 'outlined' }
       ],
       activeButton: null,
       searchCondition: {
-        frontUserId: "",
-        name: "",
-        reviewStatus: null,
-        sortBy: "createdAt",
-        sortDirection: "DESC",
+        // frontUserId: '',
+        name: '',
+        email: '',
+        reviewStatus: '',
+        sortBy: 'createdAt',
+        sortDirection: 'DESC',
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 10
       },
       // items: [
       //   { id: 1, name: "Item 1" },
@@ -187,30 +148,30 @@ export default {
       // ],
       items: [],
       headers: [
-        { text: "序號", value: "id" },
-        { text: "姓名", value: "name" },
-        { text: "Email", value: "email" },
-        { text: "申請日期", value: "date" },
-        { text: "審核狀態", value: "status" },
-        { text: "", value: "actions", sortable: false },
+        { text: '序號', value: 'id' },
+        { text: '姓名', value: 'name' },
+        { text: 'Email', value: 'email' },
+        { text: '申請日期', value: 'date' },
+        { text: '審核狀態', value: 'status' },
+        { text: '', value: 'actions', sortable: false }
       ],
       paginations: {
         currentPage: 1,
         totalCount: 0,
-        totalPages: 1,
+        totalPages: 1
       },
       page: 1,
       perPage: 1,
       tableItems: [],
       StatusList: [
-        { name: "全部", value: "" },
-        { name: "審核中", value: 0 },
-        { name: "已審核", value: 1 },
+        { name: '全部', value: '' },
+        { name: '審核中', value: 0 },
+        { name: '已審核', value: 1 }
       ],
       listAmount: [1, 10, 50, 100, 500],
-      search: "",
+      search: '',
       loading: false,
-       currentTime: ''
+      currentTime: ''
     };
   },
   created() {
@@ -238,7 +199,7 @@ export default {
       const start = (this.paginations.currentPage - 1) * this.perPage;
       const end = start + this.perPage;
       return this.items.slice(start, end);
-    },
+    }
   },
   watch: {
     searchCondition: {
@@ -246,7 +207,7 @@ export default {
         const store = studentStore();
         store.searchCondition = this.searchCondition;
       },
-      deep: true,
+      deep: true
     },
     paginations: {
       handler() {
@@ -254,8 +215,8 @@ export default {
         // store.paginations[this.activeTab] = this.paginations;
         store.updatePagination(this.paginations);
       },
-      deep: true,
-    },
+      deep: true
+    }
     // "paginations.currentPage"(newPage, oldPage) {
     //   console.log(`頁碼從 ${oldPage} 變為 ${newPage}`);
     // },
@@ -265,104 +226,92 @@ export default {
       if (!dateStr) {
         // 如果 dateStr 是 undefined 或空值，直接返回空字符串或其他處理邏輯
         // console.error("Invalid date string:", dateStr);
-        return "";
+        return '';
       }
       const date = new Date(dateStr);
-      const isUtc =
-        !dateStr.includes("Z") && !dateStr.includes("+") && !dateStr.includes("-");
+      const isUtc = !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.includes('-');
       if (isUtc) {
         date.setHours(date.getHours() + 8);
       }
       const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const day = date.getDate().toString().padStart(2, "0");
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
       const formattedDateTime = `${year}/${month}/${day} ${hours}:${minutes}`;
       return formattedDateTime;
     },
     async searchStudentMember() {
       this.loading = true;
       try {
-        const studentId = this.searchCondition.studentId || "";
-        const name = this.searchCondition.name || "";
-        const email = this.searchCondition.email || "";
-        const reviewStatus = this.searchCondition.reviewStatus || "";
-        const currentPage = this.paginations.currentPage || 1;
-        const pageSize = this.paginations.pageSize || 10;
-        const sortField = "created_at";
-        const sortOrder = "ASC";
-        // console.log("call API 前", currentPage);
-        await studentSrv
-          .searchStudentMember(
-            studentId,
-            name,
-            email,
-            reviewStatus,
-            currentPage,
-            pageSize,
-            sortField,
-            sortOrder
-          )
-          .then((res) => {
-            // api 回傳成功
-            if (res.isSuccess) {
-              // rtnCode 為 0000 的情況
-              if (res.data.rtnCode === "0000") {
-                this.tableItems = res.data.data;
-                // this.paginations.currentPage = res.data.pagination.currentPage;
-                // this.paginations.totalPages = res.data.pagination.totalPages;
-                this.paginations = {
-                  currentPage: res.data.pagination.currentPage,
-                  totalPages: res.data.pagination.totalPages,
-                  totalCount: res.data.pagination.totalCount,
-                };
-                // console.log("searchStudentMember成功: ", this.paginations);
-              } else {
-                // rtnCode 不為 0000 的情況
-                Swal.fire({
-                  toast: true,
-                  position: "center",
-                  title: `${res.data.rtnMsg}`,
-                  confirmButtonColor: "#0E2A34",
-                  confirmButtonText: "確認",
-                  background: "#F0F0F2",
-                  width: 400,
-                });
-              }
-            } else {
-              // api 回傳失敗
-              Swal.fire({
-                toast: true,
-                position: "center",
-                title: `${res.data.data.rtnMsg}`,
-                confirmButtonColor: "#0E2A34",
-                confirmButtonText: "確認",
-                background: "#F0F0F2",
-                width: 400,
-              });
+        const params = {
+          page: this.paginations.currentPage,
+          size: this.searchCondition.pageSize,
+          sortField: 'created_at',
+          sortOrder: 'DESC',
+          name: this.searchCondition.name || '',
+          email: this.searchCondition.email || '',
+          reviewStatus: this.searchCondition.reviewStatus
+        };
+      
+        // const studentId = this.searchCondition.studentId || '';
+        // const name = this.searchCondition.name || '';
+        // const email = this.searchCondition.email || '';
+        // const reviewStatus = this.searchCondition.reviewStatus || '';
+        // const currentPage = this.paginations.currentPage || 1;
+        // const pageSize = this.paginations.pageSize || 10;
+        // const sortField = 'created_at';
+        // const sortOrder = 'ASC';
+
+        await studentSrv.searchStudentMember(params).then((res) => {
+          // api 回傳成功
+          if (res.isSuccess) {
+            // rtnCode 為 0000 的情況
+            if (res.data.rtnCode === '0000') {
+              this.tableItems = res.data.data;
             }
-          })
-          .catch((error) => {
-            // 處理錯誤情況
-            console.error("Error:", error);
-          })
-          .finally(() => {
-            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-            this.loading = false;
-          });
+          } else {
+            // api 回傳失敗
+            Swal.fire({
+              toast: true,
+              position: 'center',
+              title: `${res.data.data.rtnMsg}`,
+              confirmButtonColor: '#0E2A34',
+              confirmButtonText: '確認',
+              background: '#F0F0F2',
+              width: 400
+            });
+          }
+        });
       } catch (error) {
-        this.loading = false;
         Swal.fire({
           toast: true,
-          position: "center",
+          position: 'center',
           title: `${error}`,
-          confirmButtonColor: "#0E2A34",
-          confirmButtonText: "確認",
-          background: "#F0F0F2",
-          width: 400,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400
         });
+      } finally {
+        // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+        this.loading = false;
       }
+    },
+    clearSearch() {
+      this.searchCondition = {
+        name: '',
+        email: '',
+        reviewStatus: '',
+        currentPage: 1,
+        pageSize: 10
+      };
+    },
+    truncateText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+      }
+      return text;
     },
     async getStudentItems(id) {
       this.loading = true;
@@ -373,7 +322,7 @@ export default {
             // api 回傳成功
             if (res.isSuccess) {
               // rtnCode 為 0000 的情況
-              if (res.data.rtnCode === "0000") {
+              if (res.data.rtnCode === '0000') {
                 this.tableItems = res.data.data;
 
                 // this.paginations.currentPage = res.data.pagination.currentPage;
@@ -382,38 +331,38 @@ export default {
                   // ...this.paginations,
                   currentPage: res.data.pagination.currentPage,
                   totalPages: res.data.pagination.totalPages,
-                  totalCount: res.data.pagination.totalCount,
+                  totalCount: res.data.pagination.totalCount
                 };
                 // console.log(this.tableItems);
-                this.$router.push("/admin/StudentViewPage");
+                this.$router.push('/admin/StudentViewPage');
               } else {
                 // rtnCode 不為 0000 的情況
                 Swal.fire({
                   toast: true,
-                  position: "center",
+                  position: 'center',
                   title: `${res.data.rtnMsg}`,
-                  confirmButtonColor: "#0E2A34",
-                  confirmButtonText: "確認",
-                  background: "#F0F0F2",
-                  width: 400,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
                 });
               }
             } else {
               // api 回傳失敗
               Swal.fire({
                 toast: true,
-                position: "center",
+                position: 'center',
                 title: `${res.data.data.rtnMsg}`,
-                confirmButtonColor: "#0E2A34",
-                confirmButtonText: "確認",
-                background: "#F0F0F2",
-                width: 400,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
               });
             }
           })
           .catch((error) => {
             // 處理錯誤情況
-            console.error("Error:", error);
+            console.error('Error:', error);
           })
           .finally(() => {
             // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
@@ -422,21 +371,21 @@ export default {
       } catch (error) {
         Swal.fire({
           toast: true,
-          position: "center",
+          position: 'center',
           title: `${error}`,
-          confirmButtonColor: "#0E2A34",
-          confirmButtonText: "確認",
-          background: "#F0F0F2",
-          width: 400,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400
         });
       }
     },
     addMember() {
       this.$router.push({
-        path: "/admin/studentView",
+        path: '/admin/studentView',
         query: {
-          action: "add",
-        },
+          action: 'add'
+        }
       });
     },
     //設定代號
@@ -444,45 +393,45 @@ export default {
       this.loading = true;
       this.currentTime = new Date();
       const obj = {
-          entryDate: this.currentTime,
-        };
-      try {    
-        if (obj.entryDate !== "" || obj.entryDate !== undefined) {
+        entryDate: this.currentTime
+      };
+      try {
+        if (obj.entryDate !== '' || obj.entryDate !== undefined) {
           // console.log(obj.entryDate);
-          studentSrv.postTransferToPersonal(id,obj).then((res) => {
+          studentSrv.postTransferToPersonal(id, obj).then((res) => {
             // api 回傳成功
             // rtnCode 為 0000 的情況
-            if (res.isSuccess && res.data.rtnCode === "0000") {
+            if (res.isSuccess && res.data.rtnCode === '0000') {
               Swal.fire({
-                  toast: true,
-                  position: "center",
-                  title: `${res.data.rtnMsg}`,
-                  confirmButtonColor: "#0E2A34",
-                  confirmButtonText: "確認",
-                  background: "#F0F0F2",
-                  width: 400,
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    this.searchStudentMember();
-                  }
-                });
+                toast: true,
+                position: 'center',
+                title: `${res.data.rtnMsg}`,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  this.searchStudentMember();
+                }
+              });
             } else {
               // rtnCode 不為 0000 的情況
               Swal.fire({
                 toast: true,
-                position: "center",
+                position: 'center',
                 title: `${res.data.rtnMsg}`,
-                confirmButtonColor: "#0E2A34",
-                confirmButtonText: "確認",
-                background: "#F0F0F2",
-                width: 400,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
               });
             }
-          })
+          });
         }
       } catch (error) {
-         // 處理錯誤情況
-         console.error("Error:", error);
+        // 處理錯誤情況
+        console.error('Error:', error);
       } finally {
         this.loading = false;
       }
@@ -496,33 +445,33 @@ export default {
           .then((res) => {
             // api 回傳成功
             // rtnCode 為 0000 的情況
-            if (res.isSuccess && res.data.rtnCode === "0000") {
+            if (res.isSuccess && res.data.rtnCode === '0000') {
               const store = studentStore();
-              console.log("1", res.data.data);
+              console.log('1', res.data.data);
               store.updateEditViewTableItem(res.data.data);
 
               this.$router.push({
-                path: "/admin/StudentView",
+                path: '/admin/StudentView',
                 query: {
-                  action: "view",
-                },
+                  action: 'view'
+                }
               });
             } else {
               // rtnCode 不為 0000 的情況
               Swal.fire({
                 toast: true,
-                position: "center",
+                position: 'center',
                 title: `${res.data.rtnMsg}`,
-                confirmButtonColor: "#0E2A34",
-                confirmButtonText: "確認",
-                background: "#F0F0F2",
-                width: 400,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
               });
             }
           })
           .catch((error) => {
             // 處理錯誤情況
-            console.error("Error:", error);
+            console.error('Error:', error);
           })
           .finally(() => {
             // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
@@ -532,12 +481,12 @@ export default {
         this.loading = false;
         Swal.fire({
           toast: true,
-          position: "center",
+          position: 'center',
           title: `${error}`,
-          confirmButtonColor: "#0E2A34",
-          confirmButtonText: "確認",
-          background: "#F0F0F2",
-          width: 400,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400
         });
       }
     },
@@ -545,12 +494,12 @@ export default {
     deleteCheck(id) {
       Swal.fire({
         toast: true,
-        position: "center",
+        position: 'center',
         title: `是否確定要刪除此申請?`,
-        confirmButtonText: "確認",
+        confirmButtonText: '確認',
 
         showCancelButton: true,
-        cancelButtonText: "取消",
+        cancelButtonText: '取消'
       }).then((result) => {
         if (result.isConfirmed) {
           this.deleteItem(id);
@@ -566,15 +515,15 @@ export default {
           .then((res) => {
             if (res.isSuccess) {
               // rtnCode 為 0000 的情況
-              if (res.data.rtnCode === "0000") {
+              if (res.data.rtnCode === '0000') {
                 Swal.fire({
                   toast: true,
-                  position: "center",
+                  position: 'center',
                   title: `${res.data.rtnMsg}`,
-                  confirmButtonColor: "#0E2A34",
-                  confirmButtonText: "確認",
-                  background: "#F0F0F2",
-                  width: 400,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
                 }).then((result) => {
                   if (result.isConfirmed) {
                     this.searchStudentMember();
@@ -584,30 +533,30 @@ export default {
                 // rtnCode 不為 0000 的情況
                 Swal.fire({
                   toast: true,
-                  position: "center",
+                  position: 'center',
                   title: `${res.data.rtnMsg}`,
-                  confirmButtonColor: "#0E2A34",
-                  confirmButtonText: "確認",
-                  background: "#F0F0F2",
-                  width: 400,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
                 });
               }
             } else {
               // api 回傳失敗
               Swal.fire({
                 toast: true,
-                position: "center",
+                position: 'center',
                 title: `${res.data.data.rtnMsg}`,
-                confirmButtonColor: "#0E2A34",
-                confirmButtonText: "確認",
-                background: "#F0F0F2",
-                width: 400,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
               });
             }
           })
           .catch((error) => {
             // 處理錯誤情況
-            console.error("Error:", error);
+            console.error('Error:', error);
           })
           .finally(() => {
             // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
@@ -616,29 +565,29 @@ export default {
       } catch (error) {
         Swal.fire({
           toast: true,
-          position: "center",
+          position: 'center',
           title: `${error}`,
-          confirmButtonColor: "#0E2A34",
-          confirmButtonText: "確認",
-          background: "#F0F0F2",
-          width: 400,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400
         });
       }
     },
     getStatusColor(status) {
       switch (status) {
         case 1: // 狀態 1：綠色
-          return "#73E14C";
+          return '#73E14C';
         case 0: // 狀態 0：橙色
-          return "#FCAF15";
+          return '#FCAF15';
         default:
           // 預設灰色處理
-          return "#CCCCCC";
+          return '#CCCCCC';
       }
     },
     setPage(page) {
       if (this.paginations.currentPage === page) {
-        console.log("點擊了同一頁，無需更新");
+        console.log('點擊了同一頁，無需更新');
         return;
       }
 
@@ -649,16 +598,16 @@ export default {
       this.searchStudentMember();
 
       // 日誌方便檢查
-      console.log("更新分頁", this.paginations);
+      console.log('更新分頁', this.paginations);
     },
     getStatusText(status) {
       switch (status) {
         case 1:
-          return "完成審核，待設定證號";
+          return '完成審核，待設定證號';
         case 0:
-          return "審核中";
+          return '審核中';
         default:
-          return "未知狀態";
+          return '未知狀態';
       }
     },
     handleButtonClick(buttonId) {
@@ -676,14 +625,14 @@ export default {
     },
     getStatusClass(status) {
       return {
-        "text-success": status === "已編輯",
-        "text-error": status !== "已編輯",
+        'text-success': status === '已編輯',
+        'text-error': status !== '已編輯'
       };
     },
     transferStatus(status) {
-      return status === "已編輯" ? "已編輯" : "未編輯";
-    },
-  },
+      return status === '已編輯' ? '已編輯' : '未編輯';
+    }
+  }
 };
 </script>
 

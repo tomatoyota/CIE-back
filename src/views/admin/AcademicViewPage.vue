@@ -311,9 +311,7 @@ export default {
         toast: true,
         position: 'center',
         title: '確定要發布此學刊?',
-        
         confirmButtonText: '確認',
-
         showCancelButton: true,
         cancelButtonText: '關閉',
         
@@ -364,6 +362,9 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     async uploadImage(){
@@ -449,12 +450,8 @@ export default {
                 toast: true,
                 position: 'center',
                 title: `${res.data.rtnMsg}`,
-                
                 confirmButtonText: '確認',
-
-                showCancelButton: true,
-                cancelButtonText: '關閉',
-                
+                showCancelButton: false,
               }).then((result) => {
                 if(result.isConfirmed){
                     this.loading = false;
@@ -468,11 +465,8 @@ export default {
                 toast: true,
                 position: 'center',
                 title: `${res.data.rtnMsg}`,
-                
                 confirmButtonText: '確認',
-
-                showCancelButton: true,
-                cancelButtonText: '關閉',
+                showCancelButton: false,
               });
             }
           } else {
@@ -482,11 +476,8 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              
               confirmButtonText: '確認',
-
-              showCancelButton: true,
-              cancelButtonText: '關閉',
+              showCancelButton: false,
             });
           }
         }).catch((error) => {
@@ -508,6 +499,8 @@ export default {
           showCancelButton: true,
           cancelButtonText: '關閉',
         });
+        // this.loading = false;
+      } finally {
         this.loading = false;
       }
     },
@@ -517,9 +510,7 @@ export default {
         toast: true,
         position: 'center',
         title: '確定修改此學刊?',
-        
         confirmButtonText: '確認',
-
         showCancelButton: true,
         cancelButtonText: '關閉',
         
@@ -611,7 +602,9 @@ export default {
           toast: true,
           position: 'center',});
           this.$router.push('/admin/publication');
-        }
+        } finally {
+        this.loading = false;
+      }
     },
     toPrev(){
       this.$router.push('/admin/publication');

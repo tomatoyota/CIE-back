@@ -155,9 +155,9 @@
                   v-model="formData.mainAddressPostal"
                   hide-details="auto"
                   placeholder="郵遞區號"
-                  clearable
                   density="compact"
                   variant="outlined"
+                  readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
@@ -218,7 +218,6 @@
                   v-model="formData.secondaryAddressPostal"
                   hide-details="auto"
                   placeholder="郵遞區號"
-                  clearable
                   density="compact"
                   variant="outlined"
                   readonly
@@ -257,6 +256,7 @@
               hide-details="auto"
               placeholder="請輸入電子郵件信箱"
               clearable
+              :disabled="pageAction === 'edit'"
               density="compact"
               variant="outlined"
             ></v-text-field>
@@ -398,7 +398,7 @@
           </v-col>
 
           <v-col cols="12" class="text-end">
-            <v-btn class="mr-2" type="cancel" variant="outlined">取消</v-btn>
+            <v-btn class="mr-2" type="cancel" variant="outlined" @click="toPrev()">取消</v-btn>
             <v-btn @click="submitMember()" color="primary" variant="flat">發布</v-btn>
           </v-col>
         </v-row>
@@ -415,7 +415,7 @@ import { ref, computed, watch } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import personalMemSrv from '@/service/personalMember.js';
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from '@/utils/sweetAlert';
 import LoadingComponent from '@/components/LoadingComponent.vue';
 import dropSrv from '@/service/dropdowns.js';
 import { storeToRefs } from 'pinia';
@@ -436,7 +436,7 @@ export default {
       tab: 1,
       search: '',
       textFieldRule: [(v) => !!v || '此欄位為必填'],
-      selectRule: [(v) => !!v || '此欄位為必填'],
+      selectRule: [(v) => (v !== null && v !== undefined) || '此欄位為必填'],
       branchList: ['台北分會', '高雄分會'],
       formData: {
         frontUserId: '',
@@ -514,15 +514,31 @@ export default {
   watch: {
     followMainAddress(val) {
       if (val) {
-        this.formData.secondaryAddressCity = this.formData.mainAddressCity;
-        this.formData.secondaryAddressDistrict = this.formData.mainAddressDistrict;
-        this.formData.secondaryAddressPostal = this.formData.mainAddressPostal;
-        this.formData.secondaryAddressDetail = this.formData.mainAddressDetail;
+        const mainCity = this.formData.mainAddressCity;
+        const mainDistrict = this.formData.mainAddressDistrict;
+        const mainPostal = this.formData.mainAddressPostal;
+        const mainDetail = this.formData.mainAddressDetail;
+
+        this.formData.secondaryAddressCity = mainCity;
+
+        this.$nextTick(() => {
+          this.formData.secondaryAddressDistrict = mainDistrict;
+          this.formData.secondaryAddressPostal = mainPostal;
+          this.formData.secondaryAddressDetail = mainDetail;
+        });
+
+        const matchCity = this.cityList.find((city) => city.locationId === mainCity);
+        if (matchCity) {
+          this.secondaryDistrictList = matchCity.children || [];
+        } else {
+          this.secondaryDistrictList = [];
+        }
       } else {
         this.formData.secondaryAddressCity = null;
         this.formData.secondaryAddressDistrict = null;
         this.formData.secondaryAddressPostal = '';
         this.formData.secondaryAddressDetail = '';
+        this.secondaryDistrictList = [];
       }
     },
     followMainPhone(val) {
@@ -532,64 +548,84 @@ export default {
         this.formData.secondaryPhone = '';
       }
     },
-    'formData.mainAddressCity': {
-      // handler(val) {
-      //   const matchCity = this.cityList.find((city) => city.locationId === val);
-      //   const districtList = matchCity.children;
-      //   const mainPostal = matchCity.postalCode;
-      //   this.districtList = districtList;
-      //   this.formData.mainAddressPostal = mainPostal;
-      // },
-      handler(val) {
-        // 找到對應的城市
-        const matchCity = this.cityList.find((city) => city.locationId === val);
-        if (matchCity) {
-          // 更新 districtList 為選中城市的 children
-          this.districtList = matchCity.children || [];
-          console.log('選中的城市：', matchCity.name);
-          console.log('更新的區域列表：', this.districtList);
-        } else {
-          this.districtList = [];
-          console.log('未找到對應的城市，清空區域列表');
-        }
-      },
-
-      onDistrictSelect(districtId) {
-        // 在 districtList 中找到選中的區域
-        const selectedDistrict = this.districtList.find((district) => district.locationId === districtId);
-        if (selectedDistrict) {
-          // 更新 mainAddressPostal 為該區域的 postalCode
-          this.formData.mainAddressPostal = selectedDistrict.postalCode;
-          this.formData.mainAddressDistrict = selectedDistrict.name; // 假設要存區域名稱
-          console.log('選中的區域：', selectedDistrict.name);
-          console.log('對應的郵遞區號：', selectedDistrict.postalCode);
-        } else {
-          // 如果未找到，設置為空
-          this.formData.mainAddressPostal = '';
-          this.formData.mainAddressDistrict = '';
-          console.log('未找到對應的區域，清空郵遞區號和區域名稱');
-        }
-      },
-
-      deep: true
+    'formData.mainAddressCity'(val) {
+      const matchCity = this.cityList.find((city) => city.locationId === val);
+      this.districtList = matchCity ? matchCity.children || [] : [];
+      this.formData.mainAddressDistrict = null;
+      this.formData.mainAddressPostal = '';
     },
-    'formData.secondaryAddressCity': {
-      handler(val) {
-        const matchCity = this.secondaryCityList.find((city) => city.locationId === val);
-
-        // 因為有同主要地址的checkbox，所以要判斷是否有matchCity，這樣 checkbox 才能順利切換
-        if (matchCity) {
-          const districtList = matchCity.children;
-          const secondaryPostal = matchCity.postalCode;
-          this.secondaryDistrictList = districtList;
-          this.formData.secondaryAddressPostal = secondaryPostal;
-        }
-      },
-      deep: true
+    'formData.mainAddressDistrict'(val) {
+      const selectedDistrict = this.districtList.find((district) => district.locationId === val);
+      this.formData.mainAddressPostal = selectedDistrict ? selectedDistrict.postalCode : '';
+    },
+    'formData.secondaryAddressCity'(val) {
+      const matchCity = this.cityList.find((city) => city.locationId === val);
+      this.secondaryDistrictList = matchCity ? matchCity.children || [] : [];
+      this.formData.secondaryAddressDistrict = null;
+      this.formData.secondaryAddressPostal = '';
+    },
+    'formData.secondaryAddressDistrict'(val) {
+      const selectedDistrict = this.secondaryDistrictList.find((district) => district.locationId === val);
+      this.formData.secondaryAddressPostal = selectedDistrict ? selectedDistrict.postalCode : '';
     }
+    // 'formData.mainAddressCity': {
+    //   handler(val) {
+    //     // 當選中城市時
+    //     const matchCity = this.cityList.find((city) => city.locationId === val);
+    //     if (matchCity) {
+    //       const districtList = matchCity.children || [];
+    //       this.districtList = districtList;
+    //       this.formData.mainAddressDistrict = null;
+    //     } else {
+    //       // 如果沒找到對應城市，清空相關數據
+    //       this.districtList = [];
+    //       this.formData.mainAddressDistrict = null;
+    //       this.formData.mainAddressPostal = '';
+    //     }
+    //   },
+
+    //   deep: true
+    // },
+    // 'formData.secondaryAddressCity': {
+    //   handler(val) {
+    //     const matchCity = this.cityList.find((city) => city.locationId === val);
+    //     if (matchCity) {
+    //       const secondaryDistrictList = matchCity.children || [];
+    //       this.secondaryDistrictList = secondaryDistrictList;
+    //       this.formData.secondaryAddressDistrict = null;
+    //       this.formData.secondaryAddressPostal = '';
+    //     } else {
+    //       this.secondaryDistrictList = [];
+    //       this.formData.secondaryAddressDistrict = null;
+    //       this.formData.secondaryAddressPostal = '';
+    //     }
+    //   },
+    //   deep: true
+    // },
+    // 'formData.mainAddressDistrict': {
+    //   handler(val) {
+    //     const selectedDistrict = this.districtList.find((district) => district.locationId === val);
+    //     if (selectedDistrict) {
+    //       this.formData.mainAddressPostal = selectedDistrict.postalCode;
+    //     } else {
+    //       this.formData.mainAddressPostal = '';
+    //     }
+    //   },
+    //   deep: true
+    // },
+    // 'formData.secondaryAddressDistrict': {
+    //   handler(val) {
+    //     const selectedDistrict = this.secondaryDistrictList.find((district) => district.locationId === val);
+    //     if (selectedDistrict) {
+    //       this.formData.secondaryAddressPostal = selectedDistrict.postalCode;
+    //     } else {
+    //       this.formData.secondaryAddressPostal = '';
+    //     }
+    //   },
+    //   deep: true
+    // }
   },
   methods: {
-    //如果前台用不到 setpage 記得住邊要移除
     setPage() {
       const action = this.$route.query.action;
       this.pageAction = action;
@@ -601,6 +637,92 @@ export default {
         const editData = editDataStore.editData.value;
         this.pageTitle = `會員資料編輯-${editData.frontUserId}${editData.Individuals[0].chineseName}`;
         this.formData = editData.Individuals[0];
+
+        // 帶入主要地址
+        const mainAddressCity = editData.Individuals[0].mainAddressCity;
+        const mainAddressDistrict = editData.Individuals[0].mainAddressDistrict;
+        const mainAddressPostal = editData.Individuals[0].mainAddressPostal;
+
+        console.log('Initial Main Address District:', mainAddressDistrict);
+
+        this.formData.mainAddressCity = mainAddressCity;
+
+        this.$nextTick(() => {
+          const matchCity = this.cityList.find((city) => city.locationId === this.formData.mainAddressCity);
+          if (matchCity) {
+            this.districtList = matchCity.children || [];
+            console.log('Updated District List:', this.districtList);
+
+            // 使用事先複製的值
+            const districtExists = this.districtList.some((district) => String(district.locationId) === String(mainAddressDistrict));
+            console.log('District Exists:', districtExists);
+
+            if (districtExists) {
+              this.formData.mainAddressDistrict = mainAddressDistrict;
+              console.log('FormData Main Address District:', this.formData.mainAddressDistrict);
+
+              // 在這裡安全地找到 selectedDistrict
+              const selectedDistrict = this.districtList.find(
+                (district) => String(district.locationId) === String(this.formData.mainAddressDistrict)
+              );
+
+              if (selectedDistrict) {
+                this.formData.mainAddressPostal = selectedDistrict.postalCode || '';
+                console.log('FormData Main Address Postal:', this.formData.mainAddressPostal);
+              } else {
+                console.error('Selected district not found in districtList!');
+              }
+            } else {
+              console.error('District not found in districtList!');
+            }
+          } else {
+            console.error('City not found in cityList!');
+          }
+        });
+
+        // 帶入次要地址
+        const secondaryAddressCity = editData.Individuals[0].secondaryAddressCity;
+        const secondaryAddressDistrict = editData.Individuals[0].secondaryAddressDistrict;
+        const secondaryAddressPostal = editData.Individuals[0].secondaryAddressPostal;
+
+        console.log('Initial Secondary Address District:', secondaryAddressDistrict);
+
+        this.formData.secondaryAddressCity = secondaryAddressCity;
+
+        this.$nextTick(() => {
+          const matchCity = this.cityList.find((city) => city.locationId === this.formData.secondaryAddressCity);
+          if (matchCity) {
+            this.secondaryDistrictList = matchCity.children || [];
+            console.log('Updated Secondary District List:', this.secondaryDistrictList);
+
+            // 使用事先複製的值
+            const districtExists = this.secondaryDistrictList.some(
+              (district) => String(district.locationId) === String(secondaryAddressDistrict)
+            );
+            console.log('Secondary District Exists:', districtExists);
+
+            if (districtExists) {
+              this.formData.secondaryAddressDistrict = secondaryAddressDistrict;
+              console.log('FormData Secondary Address District:', this.formData.secondaryAddressDistrict);
+
+              // 在這裡安全地找到 selectedDistrict
+              const selectedDistrict = this.secondaryDistrictList.find(
+                (district) => String(district.locationId) === String(this.formData.secondaryAddressDistrict)
+              );
+
+              if (selectedDistrict) {
+                this.formData.secondaryAddressPostal = selectedDistrict.postalCode || '';
+                console.log('FormData Secondary Address Postal:', this.formData.secondaryAddressPostal);
+              } else {
+                console.error('Selected district not found in secondaryDistrictList!');
+              }
+            } else {
+              console.error('Secondary district not found in secondaryDistrictList!');
+            }
+          } else {
+            console.error('Secondary city not found in cityList!');
+          }
+        });
       }
       this.$router.replace('/admin/personalView');
     },
@@ -665,7 +787,7 @@ export default {
           });
       } catch {}
     },
-    
+
     async submitMember() {
       this.loading = true;
       try {
@@ -702,7 +824,9 @@ export default {
           magazineSubscription: !this.formData.magazineSubscription ? true : false,
           infoSubscription: !this.formData.infoSubscription ? true : false
         };
+        
         const apiName = this.pageAction === 'add' ? 'postMember' : 'putMember';
+        console.log('API Name:', apiName);
         const id = obj.frontUserId;
         personalMemSrv[apiName](obj, id)
           .then((res) => {
@@ -723,6 +847,21 @@ export default {
                     this.$router.push('/admin/Member');
                   }
                 });
+              } else if (res.data.rtnCode === '0002') {
+                console.log('res.data.rtnCode:', res.data.rtnCode);
+                console.log('res.data.rtnMsg:', res.data.rtnMsg);
+                console.log('res.data.errors:', res.data.errors);
+                console.log('res.data.data:', res.data.data);
+                // rtnCode 不為 0000 的情況
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.errors[0].message}`,
+                  confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  background: '#F0F0F2',
+                  width: 400
+                });
               } else {
                 // rtnCode 不為 0000 的情況
                 Swal.fire({
@@ -740,7 +879,7 @@ export default {
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.data.rtnMsg}`,
+                title: `${res.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',

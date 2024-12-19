@@ -39,19 +39,7 @@ export default {
           console.error('API 請求錯誤:', error);
         });
     },
-    // fetchData(){
-    //   testSrv.test().then((res) => {
-    //     console.log(res)
-    //   })
-    // },
-    // async fetchData() {
-    //   try {
-    //     const response = await axios.get('/test');
-    //     this.data = response.data; // 假設 API 返回的數據在 data 屬性中
-    //   } catch (error) {
-    //     this.error = error.message;
-    //   }
-    // },
+    
   },
   mounted() {
     this.fetchData(); // 組件掛載後立即發送請求

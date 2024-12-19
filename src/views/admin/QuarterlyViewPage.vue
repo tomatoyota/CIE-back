@@ -41,7 +41,7 @@
           </v-col>
           <v-col cols="12">
             <v-row>
-              <v-col cols="3">
+              <v-col cols="4">
                 <div class="bold">西元</div>
                 <v-text-field
                 v-model="formData.year"
@@ -56,7 +56,7 @@
           </v-col>
           <v-col cols="12">
             <v-row>
-              <v-col cols="3">
+              <v-col cols="4">
                 <div class="bold">季</div>
                 <v-select
                 v-model="formData.season"
@@ -70,7 +70,7 @@
           </v-col>
           <v-col cols="12">
             <v-row>
-              <v-col cols="3">
+              <v-col cols="4">
                 <div class="bold">發行日期</div>
                 <datepicker 
                 v-model="formData.releaseAt" 
@@ -308,20 +308,20 @@ export default {
         this.$refs.fileInputEbook.reset()
       }
     },
-    // transformDate(date) {
-    //   if (date) {
-    //     const year = date.getFullYear()
-    //     let month = date.getMonth() + 1
-    //     let day = date.getDate()
+    transformDate(date) {
+      if (date) {
+        const year = date.getFullYear()
+        let month = date.getMonth() + 1
+        let day = date.getDate()
 
-    //     // 將月份和日期補0
-    //     month = month < 10 ? '0' + month : month
-    //     day = day < 10 ? '0' + day : day
+        // 將月份和日期補0
+        month = month < 10 ? '0' + month : month
+        day = day < 10 ? '0' + day : day
 
-    //     return `${year}-${month}-${day}`
-    //   }
-    //   return ''
-    // },
+        return `${year}-${month}-${day}`
+      }
+      return ''
+    },
     formatDate(dateStr) {
       const date = new Date(dateStr);
       const isUtc = !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.includes('-');
@@ -363,7 +363,7 @@ export default {
     uploadFile(type, fileName){
       this.loading = true
 
-      try{
+      try {
         const formData = new FormData
         if(type === 1){
           formData.append('file', this.coverImage, fileName)
@@ -387,7 +387,7 @@ export default {
             console.log(res)
           }
         })
-      }catch(error){
+      } catch(error){
         this.loading = false
       }
     },
@@ -487,6 +487,7 @@ export default {
           title: `${error}`,
           confirmButtonText: '確認',
         })
+      } finally {
         this.loading = false;
       }
     },
@@ -590,6 +591,7 @@ export default {
           title: `${error}`,
           confirmButtonText: '確認',
         })
+      } finally {
         this.loading = false;
       }
     },

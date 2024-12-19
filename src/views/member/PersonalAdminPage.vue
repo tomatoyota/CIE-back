@@ -64,21 +64,6 @@
       </v-col>
     </v-row>
 
-    <!-- 國教院的範本，如果要使用這個範本整段打開就可以用了，記得要把下面的 pagination 關起來 -->
-    <!-- <div class="mt-7 d-flex align-end justify-space-between">
-      <v-row class="align-center" no-gutters>
-        <p class="mb-0 mr-2">共{{ paginations.totalCount }}筆</p>
-        <v-col>
-          <PaginationComponent
-            :pageLength="paginations.totalPages"
-            :current-page="paginations.currentPage"
-            @get-list="searchMemberList"
-            @set-page="setPage"
-          ></PaginationComponent>
-        </v-col>
-      </v-row>
-    </div> -->
-
     <v-table class="mt-4" :height="tableItems.length > 10 ? '550px' : ''" :fixed-header="tableItems.length > 10 ? true : false">
       <thead>
         <tr>
@@ -99,17 +84,17 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in tableItems" :key="item.frontUserId" class="hover-effect">
-          <td class="no-wrap">{{ item.frontUserId }}</td>
+          <td class="no-wrap">{{ truncateText(item.frontUserId, 16) }}</td>
           <td class="no-wrap position-relative">
-            <div class="paymentFalse" v-if="item.paymentStatus === 0">
+            <div class="paymentFalse" v-if="item.paymentStatus === ''">
               <v-icon class="icon" icon="mdi mdi-exclamation" size="8px" color="white"></v-icon>
             </div>
             <div :class="['lvColor text-center', getLvColor(item)]">{{ convertLevel(item.level) }}</div>
           </td>
-          <td class="no-wrap">{{ item.chineseName }}</td>
-          <td class="no-wrap">{{ item.mainAddressCity + item.mainAddressDistrict + item.mainAddressDetail }}</td>
+          <td class="no-wrap">{{ truncateText(item.chineseName, 16) }}</td>
+          <td class="no-wrap">{{ truncateText(item.mainAddressCity + item.mainAddressDistrict + item.mainAddressDetail, 30) }}</td>
           <td class="no-wrap">{{ item.mainPhone }}</td>
-          <td class="no-wrap">{{ item.email }}</td>
+          <td class="no-wrap">{{ truncateText(item.email, 25) }}</td>
           <td :class="getStatusClass(item.paymentStatus)" class="no-wrap">
             <v-chip :color="item.statusColor" :class="getStatusClass(item.paymentStatus)" variant="text">
               {{ convertPaymentStatus(item.paymentStatus) }}
@@ -158,7 +143,7 @@ export default {
         frontUserId: '',
         name: '',
         level: null,
-        paymentStatus: 0,
+        paymentStatus: '',
         sortBy: 'createdAt',
         sortDirection: 'DESC',
         currentPage: 1,
@@ -303,8 +288,6 @@ export default {
           sortField,
           sortOrder
         };
-       
-
 
         await personalMemSrv
           .searchMemberList(frontUserId, name, level, paymentStatus, currentPage, pageSize, sortField, sortOrder)
@@ -317,11 +300,11 @@ export default {
                 this.paginations.currentPage = res.data.pagination.currentPage;
                 this.paginations.totalPages = res.data.pagination.totalPages;
                 this.paginations = {
-          ...this.paginations,
-          currentPage: res.data.pagination.currentPage,
-          totalPages: res.data.pagination.totalPages,
-          totalCount: res.data.pagination.totalCount,
-        };
+                  ...this.paginations,
+                  currentPage: res.data.pagination.currentPage,
+                  totalPages: res.data.pagination.totalPages,
+                  totalCount: res.data.pagination.totalCount
+                };
                 // console.log("發送的請求參數：", condition);
                 // console.log(this.tableItems)
                 // console.log(this.paginations.currentPage)
@@ -374,6 +357,9 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     addMember() {
@@ -383,6 +369,12 @@ export default {
           action: 'add'
         }
       });
+    },
+    truncateText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+      }
+      return text;
     },
     async getPersonalLevelList() {
       this.loading = true;
@@ -425,6 +417,9 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     async getAcademicsDetail(id) {
@@ -493,6 +488,9 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     deleteAcademicsItemCheck(id) {
@@ -567,15 +565,20 @@ export default {
             this.loading = false;
           });
       } catch (error) {
-        Swal.fire({
+        // 捕捉錯誤
+        console.error('Error:', error);
+        await Swal.fire({
           toast: true,
           position: 'center',
-          title: `${error}`,
+          title: `系統錯誤：${error.message || error}`,
           confirmButtonColor: '#0E2A34',
           confirmButtonText: '確認',
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     async getPaymentHistory(item) {
@@ -640,6 +643,9 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     convertPaymentStatus(status) {
@@ -669,7 +675,7 @@ export default {
         frontUserId: '',
         name: '',
         level: null,
-        paymentStatus: null,
+        paymentStatus: '',
         sortBy: 'createdAt',
         sortDirection: 'DESC',
         currentPage: 1,
@@ -695,7 +701,7 @@ export default {
       return status === 1 ? 'paid' : 'unpaid';
     },
     getLvColor(item) {
-      if (item.paymentStatus === 0) {
+      if (item.paymentStatus === '') {
         return 'bg-gray';
       }
       switch (item.level) {
@@ -727,9 +733,9 @@ export default {
       console.log('更新分頁', this.paginations);
     },
     handlePageChange(newPage) {
-        // if (this.paginations.currentPage === newPage) {
-        //   return; // 避免重複 API 請求
-        // }
+      // if (this.paginations.currentPage === newPage) {
+      //   return; // 避免重複 API 請求
+      // }
       this.paginations.currentPage = newPage; // 更新當前頁碼
       this.searchMemberList(); // 執行搜尋
     },

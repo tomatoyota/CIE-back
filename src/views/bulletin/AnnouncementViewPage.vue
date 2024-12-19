@@ -1,5 +1,5 @@
 <template>
-  <div class=" pb-10 mb-10 vh-100">
+  <div class="pb-10 mb-10 vh-100">
     <v-row class="mb-4" align="center" no-gutters>
       <v-icon class="mr-2" size="x-large" @click="backToList">mdi mdi-chevron-left</v-icon>
       <div v-if="isEdit === null" class="title">新增文章</div>
@@ -56,54 +56,84 @@
             </VueDatePicker>
           </v-col>
         </v-row>
-        
+
         <div v-if="formData.type === 4">
           <div class="bold">相簿連結</div>
-          <v-text-field placeholder="請輸入相簿連結" variant="outlined" flat v-model="formData.albumUrl" :rules="albumUrlRules"
-          :required="isAlbumUrlRequired"></v-text-field>
+          <v-text-field
+            placeholder="請輸入相簿連結"
+            variant="outlined"
+            flat
+            v-model="formData.albumUrl"
+            :rules="albumUrlRules"
+            :required="isAlbumUrlRequired"
+          ></v-text-field>
         </div>
       </v-col>
     </v-form>
-    <quill-editor v-if="formData.type !== 4" v-model="formData.content" ref="myQuillEditor" :options="editorOptions" @text-change="handleTextChange"></quill-editor>
+    <quill-editor
+      v-if="formData.type !== 4"
+      v-model="formData.content"
+      ref="myQuillEditor"
+      :options="editorOptions"
+      @text-change="handleTextChange"
+    ></quill-editor>
     <div class="buttonGroup text-center mt-8">
       <v-btn flat color="#F5F5F5" class="mr-2" @click="backToList()"> 返回列表 </v-btn>
       <v-btn v-if="formData.type !== 4" flat color="#F5F5F5" class="mr-2" @click="openPreview"> 預覽 </v-btn>
-      <v-btn v-if="formData.type !== 4 && isEdit === null" variant="flat" color="success" class="mr-2" :disabled="!validation" @click="postAnnouncement('post')">
+      <v-btn
+        v-if="formData.type !== 4 && isEdit === null"
+        variant="flat"
+        color="primary"
+        class="mr-2"
+        :disabled="!validation"
+        @click="postAnnouncement('post')"
+      >
         發布
       </v-btn>
-      <v-btn v-if="formData.type !== 4 && isEdit !== null" variant="flat" color="success" class="mr-2" :disabled="!validation" @click="postAnnouncement('put')"> 儲存 </v-btn>
+      <v-btn
+        v-if="formData.type !== 4 && isEdit !== null"
+        variant="flat"
+        color="primary"
+        class="mr-2"
+        :disabled="!validation"
+        @click="postAnnouncement('put')"
+      >
+        儲存
+      </v-btn>
 
       <!-- 新增相簿 -->
-      <v-btn v-if="formData.type === 4 && isEdit === null" @click="submitAlbum('post')" variant="flat" color="success">發布</v-btn>
+      <v-btn v-if="formData.type === 4 && isEdit === null" @click="submitAlbum('post')" variant="flat" color="primary">發布</v-btn>
 
       <!-- 編輯相簿 -->
-      <v-btn v-if="formData.type === 4 && isEdit" @click="submitAlbum('put')" variant="flat" color="success">儲存</v-btn>
-
+      <v-btn v-if="formData.type === 4 && isEdit" @click="submitAlbum('put')" variant="flat" color="primary">儲存</v-btn>
     </div>
 
     <!-- 預覽對話框 -->
     <v-dialog v-model="previewDialog" max-width="800px">
       <v-card>
+        <div class="previewDialog-close">
+          <v-icon icon="mdi-close" @click="previewDialog = false"></v-icon>
+        </div>
+        
         <v-card-text>
           <div class="title-underline">
-    <h4 class="announcement-title">{{ previewData.announcementTitle }}</h4>
-    <div class="release-date">{{ dateFormat(previewData.releaseAt) }}</div>
-  </div>
+            <h4 class="announcement-title">{{ previewData.announcementTitle }}</h4>
+            <div class="release-date">{{ dateFormat(previewData.releaseAt) }}</div>
+          </div>
           <div class="announcement-content" v-html="previewData.content"></div>
         </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" @click="previewDialog = false">關閉</v-btn>
+        <v-card-actions class="previewDialog-btn">
+          <v-btn color="primary" variant="flat" @click="previewDialog = false">關閉</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-
   </div>
 </template>
 
 <script>
 import Quill from 'quill';
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+// import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from '@/utils/sweetAlert';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import announcementSrv from '@/service/announcement.js';
@@ -112,8 +142,7 @@ import { userAnnouncementStore } from '@/stores/Announcement.js';
 
 export default {
   components: {
-    VueDatePicker,
-
+    VueDatePicker
   },
   data() {
     return {
@@ -131,7 +160,8 @@ export default {
       newsId: '',
       validation: false,
       previewDialog: false, // 預覽框狀態
-      previewData: { // 預覽資料
+      previewData: {
+        // 預覽資料
         announcementTitle: '',
         releaseAt: '',
         expiredAt: '',
@@ -146,7 +176,7 @@ export default {
       editorOptions: {
         modules: {
           toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
+            // ['bold', 'italic', 'underline', 'strike'],
             // [{ list: 'ordered' }, { list: 'bullet' }],
             [{ header: [1, 2, 3, 4, 5, 6, false] }],
             // [{ size: ['small', false, 'large', 'huge'] }],
@@ -272,6 +302,27 @@ export default {
     } else {
       this.$refs.myQuillEditor.setContents([{ insert: '\n' }, { insert: '\n' }, { insert: '\n' }, { insert: '\n' }]);
     }
+    this.tooltipObserver = new MutationObserver(() => {
+      const tooltip = document.querySelector('.ql-tooltip');
+      if (tooltip) {
+        tooltip.style.left = '';
+        tooltip.style.top = '';
+        tooltip.style.position = 'absolute';
+        tooltip.style.transform = 'translateX(+50%)';
+      }
+    });
+
+    // 開始觀察 document.body 的變化
+    this.tooltipObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  },
+  beforeDestroy() {
+    // 停止監聽並斷開觀察
+    if (this.tooltipObserver) {
+      this.tooltipObserver.disconnect();
+    }
   },
   methods: {
     // setPageTitle(){
@@ -283,7 +334,7 @@ export default {
     //     actionTitle = '編輯文章'
     //     const store = useQuarterStore()
     //     const { editData } = storeToRefs(store);
-        
+
     //     this.formData = editData
     //   }
     //   this.pageTitle = actionTitle
@@ -316,7 +367,7 @@ export default {
       this.previewData.content = this.formData.content; // 如果需要處理HTML格式，可以使用其他方法
       this.previewDialog = true; // 打開預覽框
     },
-    
+
     determineType() {
       return '1';
     },
@@ -341,8 +392,8 @@ export default {
         this.transformedHTML = newHtml;
       }
       // 確認內容是否更新
-  this.formData.content = html; // 確保更新formData.content
-  // console.log('Current content:', this.formData.content); // 調試輸出
+      this.formData.content = html; // 確保更新formData.content
+      // console.log('Current content:', this.formData.content); // 調試輸出
     },
     postAnnouncement(action) {
       let content = this.transformedHTML;
@@ -403,10 +454,12 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
+              // confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
+              showCancelButton: false,
+              // cancelButtonText: '取消',
+              // background: '#F0F0F2',
+              // width: 500
             }).then((result) => {
               if (result.isConfirmed) {
                 this.$router.push('/admin/Bulletin');
@@ -417,10 +470,10 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
+              // confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
+              // background: '#F0F0F2',
+              // width: 500
             });
           }
         });
@@ -433,10 +486,10 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
+              // confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
+              // background: '#F0F0F2',
+              // width: 500
             }).then((result) => {
               if (result.isConfirmed) {
                 this.$router.push('/admin/Bulletin');
@@ -447,17 +500,16 @@ export default {
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
+              // confirmButtonColor: '#0E2A34',
               confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
+              // background: '#F0F0F2',
+              // width: 500
             });
           }
         });
       }
     },
     dateFormat(date, action) {
-      
       const dateStr = new Date(date);
       const year = dateStr.getFullYear();
       const month = String(dateStr.getMonth() + 1).padStart(2, '0');
@@ -475,10 +527,7 @@ export default {
     validateAlbumUrl() {
       if (this.formData.type === 4) {
         this.isAlbumUrlRequired = true;
-        this.albumUrlRules = [
-          (v) => !!v || '此欄位為必填',
-          (v) => /^https:\/\/.*/.test(v) || '必須是以 https:// 開頭的有效網址',
-        ];
+        this.albumUrlRules = [(v) => !!v || '此欄位為必填', (v) => /^https:\/\/.*/.test(v) || '必須是以 https:// 開頭的有效網址'];
       } else {
         this.isAlbumUrlRequired = false;
         this.albumUrlRules = [];
@@ -584,9 +633,9 @@ export default {
       });
     },
 
-    async submitAlbum(action){
-      this.loading = true
-      try{
+    async submitAlbum(action) {
+      this.loading = true;
+      try {
         let releaseAt = String(this.formData.releaseAt);
         let expiredAt = String(this.formData.expiredAt);
 
@@ -617,77 +666,85 @@ export default {
           albumUrl: this.formData.albumUrl,
           content: '<template>/n</template>',
           images: []
-        }
+        };
 
-        let apiAction = ''
-        if(action === 'post'){
-          apiAction = 'postAnnouncement'
-        }else if(action === 'put'){
-          apiAction = 'putAnnouncement'
-          obj.announcementsId = this.newsId
+        let apiAction = '';
+        if (action === 'post') {
+          apiAction = 'postAnnouncement';
+        } else if (action === 'put') {
+          apiAction = 'putAnnouncement';
+          obj.announcementsId = this.newsId;
         }
-        await announcementSrv[apiAction](obj).then((res) => {
-          // api 回傳成功
-          if (res.isSuccess) {
-            // rtnCode 為 0000 的情況
-            if(res.data.rtnCode === '0000'){
+        await announcementSrv[apiAction](obj)
+          .then((res) => {
+            // api 回傳成功
+            if (res.isSuccess) {
+              // rtnCode 為 0000 的情況
+              if (res.data.rtnCode === '0000') {
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  // confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  showCancelButton: false,
+                  // background: '#F0F0F2',
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    // this.searchGroupMemberList()
+                    this.$router.push('/admin/Bulletin');
+                  }
+                });
+              } else {
+                // rtnCode 不為 0000 的情況
+                Swal.fire({
+                  toast: true,
+                  position: 'center',
+                  title: `${res.data.rtnMsg}`,
+                  // confirmButtonColor: '#0E2A34',
+                  confirmButtonText: '確認',
+                  showCancelButton: false,
+                  // background: '#F0F0F2',
+                  // width: 500
+                });
+              }
+            } else {
+              // api 回傳失敗
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.rtnMsg}`,
-                confirmButtonColor: '#0E2A34',
+                title: `${res.data.data.rtnMsg}`,
+                // confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
-                background: '#F0F0F2',
-                width: 400
-              }).then((result) => {
-                if(result.isConfirmed){
-                  // this.searchGroupMemberList()
-                  this.$router.push('/admin/Bulletin');
-                }
-              });
-            }else{
-              // rtnCode 不為 0000 的情況
-              Swal.fire({
-                toast: true,
-                position: 'center',
-                title: `${res.data.rtnMsg}`,
-                confirmButtonColor: '#0E2A34',
-                confirmButtonText: '確認',
-                background: '#F0F0F2',
-                width: 400
+                showCancelButton: false,
+                // background: '#F0F0F2',
+                width: 500
               });
             }
-          } else {
-            // api 回傳失敗
-            Swal.fire({
-              toast: true,
-              position: 'center',
-              title: `${res.data.data.rtnMsg}`,
-              confirmButtonColor: '#0E2A34',
-              confirmButtonText: '確認',
-              background: '#F0F0F2',
-              width: 400
-            });
-          }
-        }).catch((error) => {
-          // 處理錯誤情況
-          console.error('Error:', error);
-        }).finally(() => {
-          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-          this.loading = false;
-        });
-      }catch(error){
+          })
+          .catch((error) => {
+            // 處理錯誤情況
+            console.error('Error:', error);
+          })
+          .finally(() => {
+            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+            this.loading = false;
+          });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
           title: `${error}`,
-          confirmButtonColor: '#0E2A34',
+          // confirmButtonColor: '#0E2A34',
           confirmButtonText: '確認',
-          background: '#F0F0F2',
-          width: 400
+          showCancelButton: false,
+          // background: '#F0F0F2',
+          width: 500
         });
+      } finally {
+        this.loading = false;
       }
-    },
+    }
   }
 };
 </script>
@@ -734,6 +791,12 @@ export default {
 .ql-toolbar.ql-snow + .ql-container.ql-snow {
   border-top: none;
 }
+.ql-container .ql-snow .ql-tooltip {
+  position: revert !important; /* 或者 relative, fixed, sticky 等你需要的值 */
+  top: 10px; /* 根據你的需求調整位置 */
+  left: 50%; /* 示例值，讓 tooltip 居中 */
+  transform: translateX(-50%);
+}
 
 .announcement-section {
   margin-bottom: 20px;
@@ -757,19 +820,30 @@ export default {
 }
 
 .title-underline::after {
-  margin-top: 4px; 
+  margin-top: 4px;
   content: '';
   width: 100%;
   height: 4px;
   display: block;
   background: linear-gradient(90deg, #1b2482 0%, rgba(27, 36, 130, 0) 100%);
 }
-.announcement-title{
+.announcement-title {
   font-weight: 700;
   font-size: 28px;
 }
+.previewDialog-btn {
+  justify-content: right;
+}
+.previewDialog-close {
+  display: flex;
+  justify-content: flex-end;
+  position: sticky;
+  right: 20px;
+  top: 10px;
+  padding-right: 10px;
+}
 
 :deep(.dp__input) {
-  background-color:#fff !important;
+  background-color: #fff !important;
 }
 </style>

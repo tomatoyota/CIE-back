@@ -1,58 +1,44 @@
 <template>
   <v-text-field
-  v-model="keyword"
-  append-inner-icon="mdi-magnify"
-  @click:append-inner="keywordSearch"
-  hide-details
-  placeholder="輸入出版品關鍵字搜尋"
-  density="compact"
-  variant="solo"
-  flat
-  elevation="0"
-  bg-color="#dddeea"
-  class="my-4 w-25"
-  clearable
+    v-model="keyword"
+    append-inner-icon="mdi-magnify"
+    @click:append-inner="keywordSearch"
+    hide-details
+    placeholder="輸入出版品關鍵字搜尋"
+    density="compact"
+    variant="solo"
+    flat
+    elevation="0"
+    bg-color="#dddeea"
+    class="my-4 w-25"
+    clearable
   ></v-text-field>
 
   <v-row class="justify-space-between">
     <v-col cols="2" class="d-flex align-center">
       <div class="bold mr-2">顯示範圍</div>
-      <v-select
-        v-model="selectedYear"
-        :items="yearsItems"
-        placeholder="全部"
-        variant="outlined"
-        density="compact"
-        hide-details
-      ></v-select>
+      <v-select v-model="selectedYear" :items="yearsItems" placeholder="全部" variant="outlined" density="compact" hide-details></v-select>
     </v-col>
     <v-col cols="2" class="text-right">
-      <v-btn color="primary" flat @click="addAssociationItem()">
-        建立新發行
-      </v-btn>
+      <v-btn color="primary" flat @click="addAssociationItem()"> 建立新發行 </v-btn>
     </v-col>
   </v-row>
 
-  <v-table
-    class="mt-4 mb-2"
-    :height="paginatedItems.length > 10 ? '550px' : ''"
-    :fixed-header="paginatedItems.length > 10"
-  >
+  <v-table class="mt-4 mb-2" :height="paginatedItems.length > 10 ? '550px' : ''" :fixed-header="paginatedItems.length > 10">
     <thead>
       <tr>
-
         <th v-for="header in headers" :key="header.value" class="no-wrap" :width="header.width">
-          <a 
-          href="#" 
-          class="text-decoration-none text-darkprimary d-flex align-center"
-          :class="!header.value ? 'no-cursor': ''"
-          @click.prevent="sortDBList(header)">
-              {{ header.text }}
-              <v-icon icon="mdi mdi-arrow-up" v-if="header.sort === 'ASC'"></v-icon>
-              <v-icon icon="mdi mdi-arrow-down" v-if="header.sort === 'DESC'"></v-icon>
+          <a
+            href="#"
+            class="text-decoration-none text-darkprimary d-flex align-center"
+            :class="!header.value ? 'no-cursor' : ''"
+            @click.prevent="sortDBList(header)"
+          >
+            {{ header.text }}
+            <v-icon icon="mdi mdi-arrow-up" v-if="header.sort === 'ASC'"></v-icon>
+            <v-icon icon="mdi mdi-arrow-down" v-if="header.sort === 'DESC'"></v-icon>
           </a>
         </th>
-        
       </tr>
     </thead>
     <tbody>
@@ -60,9 +46,9 @@
         <td class="no-wrap">{{ item.year }}</td>
         <td class="no-wrap">{{ item.season }}</td>
         <td class="no-wrap">{{ formatDate(item.releaseAt) }}</td>
-        <td class="no-wrap">{{ item.title }}</td>
+        <td class="no-wrap">{{ truncateText(item.title,60) }}</td>
         <td class="no-wrap">{{ formatDate(item.updatedAt) }}</td>
-        
+
         <td class="no-wrap text-right">
           <v-btn variant="outlined" class="text-style" @click="editAssociationDetail(item.associationId)">編輯</v-btn>
           <v-btn variant="text" class="text-style" @click="deleteAssociationsItemCheck(item.associationId)">刪除</v-btn>
@@ -70,17 +56,24 @@
       </tr>
     </tbody>
   </v-table>
-<LoadingComponent :loading="loading" />
-<PaginationComponent :currentPage="paginations.currentPage" :pageLength="paginations.totalPages" circle class="custom-pagination" @setPage="setNewPage"></PaginationComponent>
+  <LoadingComponent :loading="loading" />
+  <PaginationComponent
+    :currentPage="paginations.currentPage"
+    :pageLength="paginations.totalPages"
+    circle
+    class="custom-pagination"
+    @setPage="setNewPage"
+  ></PaginationComponent>
 </template>
 
 <script>
-import publicationSrv from '@/service/associations.js'
+import publicationSrv from '@/service/associations.js';
 import Swal from '@/utils/sweetAlert';
+import swalWithCustomStyles from '@/utils/sweetAlert';
 import LoadingComponent from '@/components/LoadingComponent.vue';
 import PaginationComponent from '@/components/PaginationComponent.vue';
 import { storeToRefs } from 'pinia';
-import { useQuarterStore } from '@/stores/quarterStore'
+import { useQuarterStore } from '@/stores/quarterStore';
 
 export default {
   components: {
@@ -91,52 +84,52 @@ export default {
     return {
       activeButton: null,
       headers: [
-        { text: '西元', value: '', sort: '', width: '10%' },
-        { text: '季', value: '', width: '10%', sort:''  },
-        { text: '發行日期', value: 'release_at', sort: 'DESC', width: '10%'  },
-        { text: '標題', value: '', width: '10%', sort:''  },
-        { text: '最後修改日期', value: 'updated_at', width: '10%',sort: 'DESC',  },
+        { text: '西元', value: '', sort: '', width: '5%' },
+        { text: '季', value: '', width: '5%', sort: '' },
+        { text: '發行日期', value: 'release_at', sort: '', width: '10%' },
+        { text: '標題', value: '', width: '60%', sort: '' },
+        { text: '最後修改日期', value: 'updated_at', width: '10%', sort: '' },
         { text: '', value: '', width: '10%', sortable: false }
       ],
-      tableItems:[],
+      tableItems: [],
       search: '',
       currentPage: 1,
       perPage: 10,
       selectedYear: null,
       loading: false,
       paginations: {
-          currentPage: 1,
-          pageSize: 10,
-          totalCount: 0,
-          totalPages: 1,
+        currentPage: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 1
       },
       sortBy: 'release_at',
       sortDirection: 'DESC',
       keyword: '',
       selectedYear: '全部',
-    yearsItems: ['全部'],
-    }
+      yearsItems: ['全部']
+    };
   },
-  created(){
-    const store = useQuarterStore()
+  created() {
+    const store = useQuarterStore();
     const { paginations } = storeToRefs(store);
-    this.paginations = paginations
+    this.paginations = paginations;
   },
   mounted() {
-    this.searchAssociationList()
-    this.getYear()
+    this.searchAssociationList();
+    this.getYear();
   },
   watch: {
-  selectedYear(newValue, oldValue) {
-    this.searchAssociationList();
+    selectedYear(newValue, oldValue) {
+      this.searchAssociationList();
+    }
   },
-},
   computed: {
     paginatedItems() {
-      const start = (this.page - 1) * this.perPage
-      const end = start + this.perPage
-      return this.tableItems.slice(start, end)
-    },
+      const start = (this.page - 1) * this.perPage;
+      const end = start + this.perPage;
+      return this.tableItems.slice(start, end);
+    }
     // pages() {
     //   return Math.ceil(this.tableItems.length / this.perPage)
     // }
@@ -150,8 +143,8 @@ export default {
         }
       });
     },
-    async searchAssociationList(){
-      this.loading = true
+    async searchAssociationList() {
+      this.loading = true;
       const obj = {
         title: '',
         relseaseStartDate: '',
@@ -163,21 +156,33 @@ export default {
         pageSize: 10,
         sortBy: this.sortBy,
         sortDirection: this.sortDirection
-      }
-      publicationSrv.searchAssociationList(obj).then((res) => {
-        
-        // api 回傳成功
-        if (res.isSuccess) {
-          // rtnCode 為 0000 的情況
-          if(res.data.rtnCode === '0000'){
-            this.tableItems = res.data.data;
-            this.paginations = res.data.pagination;
+      };
+      publicationSrv
+        .searchAssociationList(obj)
+        .then((res) => {
+          // api 回傳成功
+          if (res.isSuccess) {
+            // rtnCode 為 0000 的情況
+            if (res.data.rtnCode === '0000') {
+              this.tableItems = res.data.data;
+              this.paginations = res.data.pagination;
 
-            const store = useQuarterStore()
-            store.updatePagination(this.paginations);
-
-          }else{
-            // rtnCode 不為 0000 的情況
+              const store = useQuarterStore();
+              store.updatePagination(this.paginations);
+            } else {
+              // rtnCode 不為 0000 的情況
+              Swal.fire({
+                toast: true,
+                position: 'center',
+                title: `${res.data.rtnMsg}`,
+                confirmButtonColor: '#0E2A34',
+                confirmButtonText: '確認',
+                background: '#F0F0F2',
+                width: 400
+              });
+            }
+          } else {
+            // api 回傳失敗
             Swal.fire({
               toast: true,
               position: 'center',
@@ -188,90 +193,94 @@ export default {
               width: 400
             });
           }
-        } else {
-          // api 回傳失敗
+        })
+        .catch((error) => {
+          // 處理錯誤情況
           Swal.fire({
             toast: true,
             position: 'center',
-            title: `${res.data.rtnMsg}`,
+            title: `${res.rtnMsg}`,
             confirmButtonColor: '#0E2A34',
             confirmButtonText: '確認',
             background: '#F0F0F2',
             width: 400
           });
-        }
-      }).catch((error) => {
-        // 處理錯誤情況
-        Swal.fire({
-            toast: true,
-            position: 'center',
-            title: '伺服器錯誤，請稍後再試',
-            confirmButtonColor: '#0E2A34',
-            confirmButtonText: '確認',
-            background: '#F0F0F2',
-            width: 400
-          });
-      }).finally(() => {
-        // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-        this.loading = false;
-      });
+        })
+        .finally(() => {
+          // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+          this.loading = false;
+        });
     },
-    async editAssociationDetail(id){
-      try{
+    async editAssociationDetail(id) {
+      try {
         publicationSrv.getAssociationDetail(id).then((res) => {
-          if(res.isSuccess){
-            const editData = res.data.data[0]
-            const store = useQuarterStore()
+          if (res.isSuccess) {
+            const editData = res.data.data[0];
+            const store = useQuarterStore();
             store.updateEditData(editData);
-            this.editAssociationItem()
-          }else{
-            Swal.fire({
+            this.editAssociationItem();
+          } else {
+            swalWithCustomStyles.fire({
               toast: true,
               position: 'center',
               title: `${res.data.data.rtnMsg}`,
-              confirmButtonText: '確認',
+              confirmButtonText: '確認'
             });
           }
-        })
-      }catch(error){
+        });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
           title: `伺服器錯誤，請聯絡開發人員`,
-          confirmButtonText: '確認',
+          confirmButtonText: '確認'
         });
       }
     },
-    async keywordSearch(){
-      this.loading = true
-      try{
+    async keywordSearch() {
+      this.loading = true;
+      try {
+        if (this.keyword == '' || this.keyword == null) {
+          this.searchAssociationList();
+          return;
+        }
         const obj = {
-          keyWord: this.keyword || '',
+          // keyWord: this.keyword,
+          ...(this.keyword ? { keyWord: this.keyword } : {}),
           sortBy: 'release_date',
           sortDirection: 'DESC'
-        }
+        };
         publicationSrv.associationKeywordSearch(obj).then((res) => {
-          // console.log(res)
-          if(res.isSuccess){
-            this.tableItems = res.data.associations;
-          }else{
+          if (res.isSuccess) {
+            if (res.data.associations.length === 0) {
+              swalWithCustomStyles.fire({
+                toast: true,
+                position: 'center',
+                title: '沒有符合的資料，請重新搜尋',
+                confirmButtonText: '確認'
+              });
+            } else {
+              this.tableItems = res.data.associations;
+              this.paginations = res.data.ass_pagination;
+            }
+          } else {
             Swal.fire({
               toast: true,
               position: 'center',
               title: `${res.data.data.rtnMsg}`,
-              confirmButtonText: '確認',
+              confirmButtonText: '確認'
             });
           }
-        })
-      }catch(error){
+        });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
           title: `伺服器錯誤，請聯絡開發人員`,
-          confirmButtonText: '確認',
+          confirmButtonText: '確認'
         });
-      }finally{
-        this.loading = false
+      } finally {
+        this.loading = false;
       }
     },
     addAssociationItem() {
@@ -290,7 +299,7 @@ export default {
         }
       });
     },
-    deleteAssociationsItemCheck(id){
+    deleteAssociationsItemCheck(id) {
       Swal.fire({
         toast: true,
         position: 'center',
@@ -298,113 +307,113 @@ export default {
         text: '刪除後將無法復原',
         confirmButtonText: '確認',
 
-        showCancelButton : true,
+        showCancelButton: true,
         cancelButtonText: '取消'
-
       }).then((result) => {
-        if(result.isConfirmed){
-          this.deleteAssociationsItem(id)
+        if (result.isConfirmed) {
+          this.deleteAssociationsItem(id);
         }
       });
     },
     deleteAssociationsItem(id) {
-      try{
+      try {
         const obj = {
           associationId: id
-        }
+        };
 
-        this.loading = true
+        this.loading = true;
 
         publicationSrv.deleteAssociationsItem(obj).then((res) => {
-          if(res.isSuccess){
+          if (res.isSuccess) {
             Swal.fire({
               toast: true,
               position: 'center',
               title: `${res.data.rtnMsg}`,
               confirmButtonText: '確認',
-
-              showCancelButton : true,
-              cancelButtonText: '取消'
-
+              showCancelButton: false,
             }).then((result) => {
-              if(result.isConfirmed){
-                this.searchAssociationList()
+              if (result.isConfirmed) {
+                this.searchAssociationList();
               }
             });
-          }else{
+          } else {
             Swal.fire({
               toast: true,
               position: 'center',
               title: `${res.data.data.rtnMsg}`,
-              confirmButtonText: '確認',
+              confirmButtonText: '確認'
             });
           }
-        })
-      }catch(error){
+        });
+      } catch (error) {
         Swal.fire({
           toast: true,
           position: 'center',
           title: `伺服器錯誤，請聯絡開發人員`,
-          confirmButtonText: '確認',
+          confirmButtonText: '確認'
         });
-      }finally{
-        this.loading = false
+      } finally {
+        this.loading = false;
       }
     },
-    async getYear(){
+    async getYear() {
       try {
-    const res = await publicationSrv.getAssociationYears();
+        const res = await publicationSrv.getAssociationYears();
 
-    if (res.isSuccess && Array.isArray(res.data.data)) {
-      const validYears = res.data.data.filter((year) => typeof year === 'number');
-      this.yearsItems = ['全部', ...validYears.sort((a, b) => b - a)];
-    } else {
-      console.error('取得年份資料失敗，資料格式不正確:', res);
-    }
-  } catch (error) {
-    console.error('取得年份資料時發生錯誤:', error);
-  }
+        if (res.isSuccess && Array.isArray(res.data.data)) {
+          const validYears = res.data.data.filter((year) => typeof year === 'number');
+          this.yearsItems = ['全部', ...validYears.sort((a, b) => b - a)];
+        } else {
+          console.error('取得年份資料失敗，資料格式不正確:', res);
+        }
+      } catch (error) {
+        console.error('取得年份資料時發生錯誤:', error);
+      }
     },
-    setNewPage(page){
-      this.paginations.currentPage = page
-      this.searchAssociationList()
+    setNewPage(page) {
+      this.paginations.currentPage = page;
+      this.searchAssociationList();
+    },
+    truncateText(text, maxLength) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+      }
+      return text;
     },
     formatDate(date) {
-      date = date.split('T')[0]
-      return date
+      date = date.split('T')[0];
+      return date;
     },
     sortDBList(header) {
-      
-      if(header.value === ''){
-        return
+      if (header.value === '') {
+        return;
       }
 
       // 排序邏輯
-      this.loading = true
+      this.loading = true;
       // 如果不是對同一個欄位排序，先把所有的 sort 清掉，再加上新的 sort
       if (header.value !== this.sortBy) {
-          this.headers.forEach((item) => item.sort = '');
-      };
+        this.headers.forEach((item) => (item.sort = ''));
+      }
       // 找出哪個欄位要排序，給予對應的條件值
       const idx = this.headers.findIndex((item) => item.value === header.value);
       if (idx !== -1) {
-          this.headers[idx].sort = header.sort ? (header.sort === 'ASC' ?  'DESC' : 'ASC') : 'DESC';
-          
-          this.sortBy = header.value;
-          this.sortDirection = this.headers[idx].sort;
-      };
+        this.headers[idx].sort = header.sort ? (header.sort === 'ASC' ? 'DESC' : 'ASC') : 'DESC';
+
+        this.sortBy = header.value;
+        this.sortDirection = this.headers[idx].sort;
+      }
       // 重置頁面
       this.paginations.currentPage = 1;
-      this.tableItems = []
+      this.tableItems = [];
 
       this.searchAssociationList();
-    },
+    }
   }
-}
+};
 </script>
-  
+
 <style scoped>
-  
 .flex-container {
   margin-top: 10px;
   display: flex;
@@ -486,7 +495,7 @@ export default {
   cursor: pointer; /* 滑鼠懸停時顯示指針 */
 }
 
-.v-chip.v-chip--size-default{
+.v-chip.v-chip--size-default {
   padding: 0px;
 }
 
@@ -495,14 +504,14 @@ export default {
   width: 50%;
   margin: 20px 0px 0px 0px;
 }
-:deep(.v-pagination__list){
+:deep(.v-pagination__list) {
   justify-content: start;
   padding: 0px;
 }
 
-:deep(.v-pagination__item--is-active){
+:deep(.v-pagination__item--is-active) {
   background-color: #111;
-  color:#fff;
+  color: #fff;
   border-radius: 4px;
 }
 </style>

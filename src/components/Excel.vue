@@ -7,8 +7,8 @@
         <v-col cols="12">
           <div class="bold mb-2">分會選擇</div>
           <v-row>
-            <v-col cols="2" v-for="(branchItem, index) in branchList">
-              <v-checkbox v-model="formData.branchIds" :value="branchItem.branchId" :label="branchItem.level"></v-checkbox>
+            <v-col cols="3" v-for="(branchItem, index) in branchList">
+              <v-checkbox color="primary" v-model="formData.branchIds" :value="branchItem.branchId" :label="branchItem.level"></v-checkbox>
             </v-col>
           </v-row>
         </v-col>
@@ -70,7 +70,6 @@
             <v-col cols="6">
               <v-select
                 v-model="formData.memberLevel"
-                placeholder="請選擇繳費狀況"
                 density="compact"
                 :items="levelList"
                 item-title="name"
@@ -84,8 +83,8 @@
         <v-col cols="12">
           <div class="bold mb-2">選擇列印欄位</div>
           <v-row>
-            <v-col cols="2" v-for="(fieldItem, index) in fieldList">
-              <v-checkbox v-model="formData.fields" :value="fieldItem" :label="fieldItem" hide-details></v-checkbox>
+            <v-col cols="3" v-for="(fieldItem, index) in fieldList">
+              <v-checkbox color="primary" v-model="formData.fields" :value="fieldItem" :label="fieldItem" hide-details></v-checkbox>
             </v-col>
           </v-row>
         </v-col>
@@ -112,10 +111,10 @@
           <v-row>
             <v-col cols="6">
               <v-select
-                v-model="formData.Status"
-                placeholder="請選擇條件"
+                v-model="formData.subscriptionStatus"
+                placeholder="可選擇條件"
                 density="compact"
-                :items="fieldList"
+                :items="statusList"
                 item-title="name"
                 item-value="value"
                 variant="outlined"
@@ -142,7 +141,7 @@
             <v-col cols="6">
               <Datepicker
                 :disabled="setCreatedAt === null"
-                v-model="formData.createdAtTo"
+                v-model="formData.joinDateTo"
                 :clearable="true"
                 :enableTimePicker="false"
                 :auto-apply="true"
@@ -188,7 +187,7 @@ export default {
     return {
       tab: 1,
       branchList: [],
-      levelList: [],
+      levelList: ['初級', '正級', '永級', '電級', '機級', '工級', '程級'],
       fieldList: [
         '姓名',
         '會員證號',
@@ -205,11 +204,12 @@ export default {
         '通訊地址',
         '電子郵件'
       ],
+      statusList: ['不設限', '正常', '失聯'],
       sortFieldList: [
-        {
-          name: '不設限',
-          value: null
-        },
+        // {
+        //   name: '不設限',
+        //   value: null
+        // },
         {
           name: '會員證號',
           value: 'front_user_id'
@@ -299,19 +299,16 @@ export default {
       ],
       formData: {
         branchIds: [],
-        paymentStatus: '',
-        paymentTrueYears: null,
-        paymentFalseYears: null,
+        paymentStatus: 0, //必填
+        paymentTrueYears: null, //為空不送
+        paymentFalseYears: null, //為空不送
         subscriptionStatus: '',
-        memberLevel: null,
-        yearsPaid: null,
-        yearsNotPaid: null,
-        createdAtFrom: '2024-10-11',
-        // createdAtTo: '2024-12-04',
-        createdAtTo: new Date(),
-        fields: [],
-        sortField: [],
-        sortOrder: ''
+        memberLevel: '初級', //必填
+        joinDateFrom: '',
+        joinDateTo: new Date(),
+        fields: ['姓名'], //至少選一個
+        sortField: 'create_at',
+        subscriptionStatus: '不設限' //必填
       },
       setCreatedAt: null,
       loading: false,
@@ -320,7 +317,7 @@ export default {
   },
   mounted() {
     this.getBranchList();
-    this.getPersonalLevelList();
+    // this.getPersonalLevelList();
   },
   watch: {
     setCreatedAt(val) {
@@ -330,20 +327,6 @@ export default {
     }
   },
   methods: {
-    setPage() {
-      const action = this.$route.query.action;
-      this.pageAction = action;
-      if (action === 'add') {
-        this.pageTitle = '新增會員';
-      } else if (action === 'edit') {
-        const store = usePersonalStore();
-        const editDataStore = storeToRefs(store);
-        const editData = editDataStore.editData.value;
-        this.pageTitle = `會員資料編輯-${editData.frontUserId}${editData.Individuals[0].chineseName}`;
-        this.formData = editData.Individuals[0];
-      }
-      this.$router.replace('/admin/personalView');
-    },
     transformDate(date) {
       if (date) {
         const year = date.getFullYear();
@@ -381,16 +364,16 @@ export default {
           .getPersonalLevelList()
           .then((res) => {
             // api 回傳成功
-            if (res.isSuccess) {
+            if (res.isSuccess && res.data.rtnCode == '0000') {
               // rtnCode 為 0000 的情況
               this.levelList = [{ name: '不設限', level: null }, ...res.data.data];
-              this.formData.level = null;
+              this.formData.memberLevel = null;
             } else {
               // api 回傳失敗
               Swal.fire({
                 toast: true,
                 position: 'center',
-                title: `${res.data.data.rtnMsg}`,
+                title: `${res.data.rtnMsg}`,
                 confirmButtonColor: '#0E2A34',
                 confirmButtonText: '確認',
                 background: '#F0F0F2',
@@ -416,111 +399,249 @@ export default {
           background: '#F0F0F2',
           width: 400
         });
+      } finally {
+        // 確保無論成功或失敗都執行
+        this.loading = false;
       }
     },
     async getExcel() {
       this.loading = true;
       try {
-        const obj = {
-          fileType: 'csv',
-          branchIds: this.formData.branchIds,
-          paymentStatus: this.formData.paymentStatus,
-          paymentTrueYears: null,
-          paymentFalseYears: null,
-          memberLevel: this.formData.memberLevel,
-          subscriptionStatus: this.formData.subscriptionStatus,
-          createdAtFrom: this.formData.createdAtFrom,
-          createdAtTo: this.formData.createdAtTo,
-          fields: this.formData.fields,
-          sortField: this.formData.sortField,
-          sortOrder: 'DESC'
-        };
+        // 驗證必填欄位
+        this.validateForm();
 
-        printSrv
-          .getExcel(obj)
-          .then((res) => {
-            // api 回傳成功
-            if (res.isSuccess) {
-              // rtnCode 為 0000 的情況
-              // console.log(res.data);
-              // console.log(res);
-              if (res.isSuccess === true) {
-                this.downloadCSV(res.data, '會員名冊.csv');
-                Swal.fire({
-                  toast: true,
-                  position: 'center',
-                  title: '下載成功',
-                  confirmButtonColor: '#0E2A34',
-                  confirmButtonText: '確認',
-                  background: '#F0F0F2',
-                  width: 400
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    this.$router.push('/admin/Member');
-                  }
-                });
-              } else {
-                // rtnCode 不為 0000 的情況
-                Swal.fire({
-                  toast: true,
-                  position: 'center',
-                  title: '搜尋失敗',
-                  confirmButtonColor: '#0E2A34',
-                  confirmButtonText: '確認',
-                  background: '#F0F0F2',
-                  width: 400
-                });
-              }
-            } else {
-              // api 回傳失敗
-              Swal.fire({
-                toast: true,
-                position: 'center',
-                title: `${res.data.data.rtnMsg}`,
-                confirmButtonColor: '#0E2A34',
-                confirmButtonText: '確認',
-                background: '#F0F0F2',
-                width: 400
-              });
-            }
-          })
-          .catch((error) => {
-            // 處理錯誤情況
-            console.error('Error:', error);
-          })
-          .finally(() => {
-            // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
-            this.loading = false;
-          });
-      } catch (error) {
-        Swal.fire({
+        // 構建 API body
+        const obj = this.buildRequestBody();
+
+        const res = await printSrv.getExcel(obj);
+        // console.log(res);
+        // 直接從 res.data 提取 CSV 資料
+        // const responseText = res.data;
+        // const rows = responseText.split('\n'); // 按行切割資料
+
+        if (res.isSuccess) {
+      const data = res.data;
+
+      // 判斷回應內容是否為 CSV 或錯誤物件
+      if (typeof data === 'string' && data.includes('\n')) {
+        // 成功：處理下載
+        this.downloadCSV(res); // 執行下載
+        await Swal.fire({
           toast: true,
           position: 'center',
-          title: `${error}`,
+          title: '下載成功',
           confirmButtonColor: '#0E2A34',
           confirmButtonText: '確認',
           background: '#F0F0F2',
-          width: 400
+          width: 400,
         });
-        this.loading = false;
+        this.$router.push('/admin/Member');
+      } else if (data.rtnCode === '0001') {
+        // 失敗：沒有符合條件的資料
+        Swal.fire({
+          toast: true,
+          position: 'center',
+          title: data.rtnMsg || '無符合搜尋的資料',
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400,
+        });
+      } else {
+        // 失敗：其他未知錯誤
+        Swal.fire({
+          toast: true,
+          position: 'center',
+          title: `下載失敗，原因：${data.rtnMsg || '未知錯誤'}`,
+          confirmButtonColor: '#0E2A34',
+          confirmButtonText: '確認',
+          background: '#F0F0F2',
+          width: 400,
+        });
+      }
+    } else {
+      // 無法執行請求時的處理（應不會進入此邏輯，但保留防禦性代碼）
+      Swal.fire({
+        toast: true,
+        position: 'center',
+        title: '下載失敗，請稍後再試',
+        confirmButtonColor: '#0E2A34',
+        confirmButtonText: '確認',
+        background: '#F0F0F2',
+        width: 400,
+      });
+    }
+  } catch (error) {
+    // 捕捉異常錯誤
+    Swal.fire({
+      toast: true,
+      position: 'center',
+      title: `錯誤：${error.rtnMsg || '未知錯誤，請重新登入後嘗試'}`,
+      confirmButtonColor: '#0E2A34',
+      confirmButtonText: '確認',
+      background: '#F0F0F2',
+      width: 400,
+    });
+  } finally {
+    // 確保無論成功或失敗都關閉 loading
+    this.loading = false;
+  }
+
+      //   printSrv.getExcel(obj).then((res) => {
+      //     // console.log(res.headers);
+      //     // api 回傳成功
+      //     if (res.isSuccess) {
+      //       // rtnCode 為 0000 的情況
+      //       if (res.data.rtnCode == '0000') {
+      //         this.downloadCSV(res);
+      //         Swal.fire({
+      //           toast: true,
+      //           position: 'center',
+      //           title: '下載成功',
+      //           confirmButtonColor: '#0E2A34',
+      //           confirmButtonText: '確認',
+      //           background: '#F0F0F2',
+      //           width: 400
+      //         }).then((result) => {
+      //           if (result.isConfirmed) {
+      //             this.$router.push('/admin/Member');
+      //           }
+      //         });
+      //       } else {
+      //         // rtnCode 不為 0000 的情況
+      //         Swal.fire({
+      //           toast: true,
+      //           position: 'center',
+      //           title: `無符合搜尋的資料`,
+      //           confirmButtonColor: '#0E2A34',
+      //           confirmButtonText: '確認',
+      //           background: '#F0F0F2',
+      //           width: 400
+      //         });
+      //       }
+      //     } else {
+      //       // api 回傳失敗
+      //       Swal.fire({
+      //         toast: true,
+      //         position: 'center',
+      //         title: `下載失敗`,
+      //         confirmButtonColor: '#0E2A34',
+      //         confirmButtonText: '確認',
+      //         background: '#F0F0F2',
+      //         width: 400
+      //       });
+      //     }
+      //   });
+      // } catch (error) {
+      //   Swal.fire({
+      //     toast: true,
+      //     position: 'center',
+      //     title: `${error}`,
+      //     confirmButtonColor: '#0E2A34',
+      //     confirmButtonText: '確認',
+      //     background: '#F0F0F2',
+      //     width: 400
+      //   });
+      //   this.loading = false;
+      // } finally {
+      //   // 無論成功或失敗都會執行，目前至少先關閉 loading，之後再依需求調整
+      //   this.loading = false;
+      // }
+    },
+    validateForm() {
+      const requiredFields = [
+        { field: this.formData.paymentStatus, name: '繳費狀態' },
+        { field: this.formData.memberLevel, name: '會員等級' },
+        { field: this.formData.fields.length > 0, name: '欄位 (至少選一項)' }
+      ];
+      const errors = requiredFields
+        .filter((item) => item.field === '' && item.field === null && item.field == undefined)
+        .map((item) => `${item.name}不能為空`);
+
+      if (errors.length > 0) {
+        throw new Error(errors.join('、<br>'));
       }
     },
-    downloadCSV(csvContent, fileName) {
-      // 創建 Blob
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    buildRequestBody() {
+      const obj = {
+        paymentStatus: this.formData.paymentStatus,
+        memberLevel: this.formData.memberLevel,
+        fields: this.formData.fields,
+        fileType: 'csv'
+      };
 
+      // 動態加入選填欄位
+      if (this.formData.branchIds) obj.branchIds = this.formData.branchIds;
+      if (this.formData.paymentTrueYears) obj.paymentTrueYears = this.formData.paymentTrueYears;
+      if (this.formData.paymentFalseYears) obj.paymentFalseYears = this.formData.paymentFalseYears;
+      if (this.formData.subscriptionStatus !== '不設限') obj.subscriptionStatus = this.formData.subscriptionStatus;
+
+      if (this.setCreatedAt !== null) {
+        (obj.createdAtFrom = this.countDate(this.formData.joinDateTo, this.setCreatedAt)),
+          (obj.createdAtTo = this.transformDate(this.formData.joinDateTo));
+      }
+
+      if (this.formData.sortField) obj.sortField = this.formData.sortField;
+      if (this.formData.subscriptionStatus !== '不設限') obj.subscriptionStatus = this.formData.subscriptionStatus;
+
+      return obj;
+    },
+    downloadCSV(res) {
+      // 創建 Blob
+      //csv
+      const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+      const blob = new Blob([bom, res.data], { type: 'text/csv;charset=utf-8;' });
+      //xlsx
+      //// 如果是 Base64
+      // const binary = atob(res.data);
+      // const arrayBuffer = new ArrayBuffer(binary.length);
+      // const uintArray = new Uint8Array(arrayBuffer);
+      // for (let i = 0; i < binary.length; i++) {
+      //   uintArray[i] = binary.charCodeAt(i);
+      // }
+      //// 一般blob
+      // const blob = new Blob([res.data], {
+      //   type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      // });
+
+      //設定檔案名稱
+      const fileName = '會員名冊.csv';
       // 建立下載連結
       const url = URL.createObjectURL(blob);
+
+      // 使用 <a> 元素觸發下載
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
-      document.body.appendChild(link);
+      // document.body.appendChild(link)
       link.click();
 
-      // 清理連結
-      document.body.removeChild(link);
+      // 清理資源
+      // document.body.removeChild(link)
       URL.revokeObjectURL(url);
     },
+
+    transformDate(date) {
+      if (date) {
+        const year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+
+        // 將月份和日期補0
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        return `${year}-${month}-${day}`;
+      }
+      return '';
+    },
+
+    countDate(baseDate, yearsAgo) {
+      if (!baseDate || !yearsAgo) return '';
+      const date = new Date(baseDate);
+      date.setFullYear(date.getFullYear() - yearsAgo);
+      return date.toISOString().split('T')[0]; // 返回 YYYY-MM-DD 格式
+    }
   }
 };
 </script>
